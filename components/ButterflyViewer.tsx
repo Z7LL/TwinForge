@@ -46,9 +46,9 @@ function paintMesh(mesh: THREE.Mesh, hex: string) {
     if (!mat) return;
     const m = mat as THREE.MeshStandardMaterial;
     m.color = color;
-    m.metalness = matt ? 0.0 : 0.9;
-    m.roughness = matt ? 0.85 : 0.15;
-    m.envMapIntensity = matt ? 0.3 : 1.5;
+    m.metalness = matt ? 0.08 : 0.88;
+    m.roughness = matt ? 0.82 : 0.18;
+    m.envMapIntensity = matt ? 0.5 : 1.8;
     m.needsUpdate = true;
   });
 }
@@ -89,7 +89,7 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   {
     glbSrc,
     handleStyle = 'honeycomb',
-    bladeShape = 'trainer-blunt',
+    bladeShape = 'Moon_Bladeglb',
     handle1Hex = '#111111',
     handle2Hex = '#111111',
     bladeHex = '#111111',
@@ -113,20 +113,20 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     zoomIn: () => {
       const cam = cameraRef.current;
       if (!cam) return;
-      cam.zoom = Math.min(cam.zoom * 1.25, 5);
+      cam.zoom = Math.min(cam.zoom * 1.2, 5);
       cam.updateProjectionMatrix();
     },
     zoomOut: () => {
       const cam = cameraRef.current;
       if (!cam) return;
-      cam.zoom = Math.max(cam.zoom / 1.25, 0.02);
+      cam.zoom = Math.max(cam.zoom / 1.2, 0.02);
       cam.updateProjectionMatrix();
     },
     resetView: () => {
       const cam = cameraRef.current;
       const ctrl = controlsRef.current;
       if (!cam || !ctrl) return;
-      cam.zoom = 0.21;
+      cam.zoom = 0.24;
       cam.updateProjectionMatrix();
       ctrl.reset();
     },
@@ -144,16 +144,18 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
-    el.appendChild(renderer.domElement);
+    renderer.toneMappingExposure = 1.28;
     rendererRef.current = renderer;
+    el.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#f4e3cf');
+    scene.fog = new THREE.Fog('#f4e3cf', 65, 110);
     sceneRef.current = scene;
 
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
     pmrem.dispose();
 
     const aspect = w / h;
@@ -166,23 +168,28 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       -1000,
        1000
     );
-    camera.position.set(0, 5, 50);
+    camera.position.set(0, 6, 52);
     camera.lookAt(0, 0, 0);
-    camera.zoom = 0.21;
+    camera.zoom = 0.24;
     camera.updateProjectionMatrix();
     cameraRef.current = camera;
 
-    const addLight = (color: number, intensity: number, x: number, y: number, z: number) => {
-      const l = new THREE.DirectionalLight(color, intensity);
-      l.position.set(x, y, z);
-      scene.add(l);
-    };
+    const sun = new THREE.DirectionalLight(0xffe2b8, 4.8);
+    sun.position.set(18, 20, 16);
+    scene.add(sun);
 
-    addLight(0xfff5e8, 3.0, 8, 12, 10);
-    addLight(0xe8f0ff, 1.5, -10, 6, 6);
-    addLight(0xffffff, 2.0, 0, -8, -12);
-    addLight(0xffffff, 1.2, 0, 15, 0);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    const skyFill = new THREE.DirectionalLight(0xfff5ea, 1.9);
+    skyFill.position.set(-14, 10, 12);
+    scene.add(skyFill);
+
+    const rim = new THREE.DirectionalLight(0xffc58a, 1.6);
+    rim.position.set(-8, 2, -16);
+    scene.add(rim);
+
+    const hemi = new THREE.HemisphereLight(0xffefd6, 0xd7b18a, 1.4);
+    scene.add(hemi);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.32));
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -251,6 +258,8 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
         const center = new THREE.Vector3();
         box.getCenter(center);
         root.position.sub(center);
+        root.rotation.y = -0.12;
+        root.scale.setScalar(1.04);
 
         cloneMaterials(root);
 
@@ -286,9 +295,9 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     const knifeBlade = findExact(root, 'Knife_Bladeglb');
     const moonBlade = findExact(root, 'Moon_Bladeglb');
 
-    if (sharpBlade) sharpBlade.visible = bladeShape === 'tanto';
-    if (knifeBlade) knifeBlade.visible = bladeShape === 'clip';
-    if (moonBlade) moonBlade.visible = bladeShape === 'straight' || bladeShape === 'trainer-blunt';
+    if (sharpBlade) sharpBlade.visible = bladeShape === 'Sharp_Bladeglb';
+    if (knifeBlade) knifeBlade.visible = bladeShape === 'Knife_Bladeglb';
+    if (moonBlade) moonBlade.visible = bladeShape === 'Moon_Bladeglb';
 
     if (handleStyle === 'arrow') {
       paintNamedMesh(root, 'Arrow_Left_Handle', handle1Hex);
@@ -298,13 +307,13 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       paintNamedMesh(root, 'Honycomb_Right_Handle', handle2Hex);
     }
 
-    if (bladeShape === 'tanto') {
+    if (bladeShape === 'Sharp_Bladeglb') {
       paintGroupExact(root, 'Sharp_Bladeglb', bladeHex);
     }
-    if (bladeShape === 'clip') {
+    if (bladeShape === 'Knife_Bladeglb') {
       paintGroupExact(root, 'Knife_Bladeglb', bladeHex);
     }
-    if (bladeShape === 'straight' || bladeShape === 'trainer-blunt') {
+    if (bladeShape === 'Moon_Bladeglb') {
       paintGroupExact(root, 'Moon_Bladeglb', bladeHex);
     }
 
@@ -315,19 +324,26 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   }, [modelReady, handleStyle, bladeShape, handle1Hex, handle2Hex, bladeHex, screwsHex]);
 
   return (
-    <div className={`relative w-full h-full ${className}`}>
-      <div ref={mountRef} className="w-full h-full" />
+    <div
+      className={`relative w-full h-full overflow-hidden ${className}`}
+      style={{
+        background:
+          'radial-gradient(circle at 50% 18%, rgba(255,244,220,0.95) 0%, rgba(248,220,180,0.85) 28%, rgba(237,188,132,0.48) 52%, rgba(255,255,255,0) 70%), linear-gradient(180deg, #fff2de 0%, #f7e5cf 38%, #f1dcc0 100%)'
+      }}
+    >
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#d7b38e]/35 via-[#edc9a5]/10 to-transparent pointer-events-none" />
+      <div ref={mountRef} className="w-full h-full relative z-[1]" />
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] z-[2]">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-[#F9733E] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-semibold text-muted-foreground tracking-wide">Loading model…</span>
+            <div className="w-9 h-9 border-2 border-[#F9733E] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold text-[#7f5a34] tracking-wide">Loading preview…</span>
           </div>
         </div>
       )}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">Model unavailable</p>
+        <div className="absolute inset-0 flex items-center justify-center z-[2]">
+          <p className="text-sm text-[#8b6846]">Model unavailable</p>
         </div>
       )}
     </div>
