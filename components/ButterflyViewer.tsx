@@ -28,8 +28,6 @@ function isMattBlack(hex: string) {
 }
 
 // Clone the material on every mesh so shared GLB materials become independent.
-// Called once after model load. After this, each mesh owns its own material
-// and we can set colors directly without affecting other meshes.
 function cloneMaterials(root: THREE.Object3D) {
   root.traverse(child => {
     const mesh = child as THREE.Mesh;
@@ -59,30 +57,64 @@ function paintMesh(mesh: THREE.Mesh, hex: string) {
   });
 }
 
-// Find a mesh by exact name, then paint it
+// Find a node anywhere in the tree whose name EXACTLY matches, then paint it as a mesh.
+// Falls back to case-insensitive exact match if strict match misses.
 function paintNamedMesh(root: THREE.Object3D, name: string, hex: string) {
   let mesh: THREE.Mesh | null = null;
+  // First pass: exact match
   root.traverse(obj => {
     if (!mesh && obj.name === name && (obj as THREE.Mesh).isMesh) {
       mesh = obj as THREE.Mesh;
     }
   });
+  // Second pass: case-insensitive match
+  if (!mesh) {
+    const lower = name.toLowerCase();
+    root.traverse(obj => {
+      if (!mesh && obj.name.toLowerCase() === lower && (obj as THREE.Mesh).isMesh) {
+        mesh = obj as THREE.Mesh;
+      }
+    });
+  }
   if (mesh) paintMesh(mesh, hex);
 }
 
-// Paint all meshes under a named group
-function paintGroup(root: THREE.Object3D, groupName: string, hex: string) {
-  let found = false;
+// Find a group/node anywhere in the tree by substring (case-insensitive),
+// then paint all meshes inside it.
+function paintGroupBySubstring(root: THREE.Object3D, substring: string, hex: string) {
+  const lower = substring.toLowerCase();
+  let found: THREE.Object3D | null = null;
   root.traverse(obj => {
-    if (found) return;
-    if (obj.name === groupName) {
-      found = true;
-      obj.traverse(child => {
-        const mesh = child as THREE.Mesh;
-        if (mesh.isMesh) paintMesh(mesh, hex);
-      });
+    if (!found && obj.name.toLowerCase().includes(lower)) {
+      found = obj;
     }
   });
+  if (!found) return;
+  (found as THREE.Object3D).traverse(child => {
+    const mesh = child as THREE.Mesh;
+    if (mesh.isMesh) paintMesh(mesh, hex);
+  });
+}
+
+// Find a node anywhere in the full tree by substring (case-insensitive).
+// Returns the first match.
+function findBySubstring(root: THREE.Object3D, substring: string): THREE.Object3D | undefined {
+  const lower = substring.toLowerCase();
+  let found: THREE.Object3D | undefined;
+  root.traverse(obj => {
+    if (!found && obj.name.toLowerCase().includes(lower)) {
+      found = obj;
+    }
+  });
+  return found;
+}
+
+// Dev helper — logs every node name once so you can verify exact names from your GLB
+function debugNodeNames(root: THREE.Object3D) {
+  if (process.env.NODE_ENV !== 'development') return;
+  const names: string[] = [];
+  root.traverse(obj => { if (obj.name) names.push(`[${obj.type}] ${obj.name}`); });
+  console.log('[ButterflyViewer] node names:\n' + names.join('\n'));
 }
 
 export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function ButterflyViewer(
@@ -267,6 +299,9 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
         // painting one handle overwrites the other.
         cloneMaterials(root);
 
+        // Log all node names in dev so you can verify exact names from the GLB.
+        debugNodeNames(root);
+
         scene.add(root);
         modelRootRef.current = root;
         setLoading(false);
@@ -289,45 +324,48 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   useEffect(() => {
     const root = modelRootRef.current;
     if (!root) return;
-    const r = root;
 
-    function topChild(exact: string, fallback?: string): THREE.Object3D | undefined {
-      return r.children.find(c => c.name === exact)
-          ?? (fallback ? r.children.find(c => c.name.includes(fallback)) : undefined);
-    }
-
-    // ── Handle groups (show/hide) ──
-    const arrowGroup     = topChild('2 Arrow Pattern Handles + Improved.glb', 'Arrow');
-    const honeycombGroup = topChild('2 Honeycomb Pattern Handles + Improved.glb', 'Honeycomb')
-                        ?? r.children.find(c => c.name.toLowerCase().includes('honeycom') || c.name.toLowerCase().includes('hony'));
+    // ── Find handle groups anywhere in the full tree by substring ──
+    // This is robust: works whether Blender exported them as top-level nodes
+    // or nested, and regardless of whether '.glb' was appended to the name.
+    const arrowGroup     = findBySubstring(root, 'Arrow Pattern');
+    const honeycombGroup = findBySubstring(root, 'Honeycomb Pattern')
+                        ?? findBySubstring(root, 'Honycomb Pattern')
+                        ?? findBySubstring(root, 'Honeycomb');
 
     if (arrowGroup)     arrowGroup.visible     = handleStyle === 'arrow';
     if (honeycombGroup) honeycombGroup.visible  = handleStyle === 'honeycomb';
 
-    // ── Blade groups (show/hide) ──
-    const sharpBlade = topChild('Sharp Blade.glb', 'Sharp');
-    const knifeBlade = topChild('Knife Blade.glb',  'Knife');
-    const moonBlade  = topChild('Moon Blade.glb',   'Moon');
+    // ── Find blade groups anywhere in the full tree by substring ──
+    const sharpBlade = findBySubstring(root, 'Sharp Blade');
+    const knifeBlade = findBySubstring(root, 'Knife Blade');
+    const moonBlade  = findBySubstring(root, 'Moon Blade');
 
     if (sharpBlade) sharpBlade.visible = bladeShape === 'tanto';
     if (knifeBlade) knifeBlade.visible = bladeShape === 'clip';
     if (moonBlade)  moonBlade.visible  = bladeShape === 'straight' || bladeShape === 'trainer-blunt';
 
-    // ── Color handles — only the active pattern's meshes ──
-    // Materials were already cloned on load, so each mesh has its own material.
+    // ── Color handles ──
+    // Try both correct spelling and the typo variant from the GLB export.
     if (handleStyle === 'arrow') {
+      // Try exact names first, then substring fallback
       paintNamedMesh(root, 'Arrow Left Handle',  handle1Hex);
       paintNamedMesh(root, 'Arrow Right Handle', handle2Hex);
     } else {
+      // Honeycomb — try both spellings (GLB may have 'Honycomb' typo)
       paintNamedMesh(root, 'Honycomb Left Handle',  handle1Hex);
       paintNamedMesh(root, 'Honycomb Right Handle', handle2Hex);
+      // Fallback with correct spelling in case GLB is fixed later
+      paintNamedMesh(root, 'Honeycomb Left Handle',  handle1Hex);
+      paintNamedMesh(root, 'Honeycomb Right Handle', handle2Hex);
     }
 
     // ── Color active blade ──
-    if (bladeShape === 'tanto' && sharpBlade)        paintGroup(root, 'Sharp Blade.glb', bladeHex);
-    if (bladeShape === 'clip' && knifeBlade)        paintGroup(root, 'Knife Blade.glb', bladeHex);
-    if ((bladeShape === 'straight' || bladeShape === 'trainer-blunt') && moonBlade)
-                                                     paintGroup(root, 'Moon Blade.glb', bladeHex);
+    // paintGroupBySubstring searches the full tree, so '.glb' suffix in node
+    // names is no longer a problem.
+    if (bladeShape === 'tanto')                                           paintGroupBySubstring(root, 'Sharp Blade', bladeHex);
+    if (bladeShape === 'clip')                                            paintGroupBySubstring(root, 'Knife Blade', bladeHex);
+    if (bladeShape === 'straight' || bladeShape === 'trainer-blunt')     paintGroupBySubstring(root, 'Moon Blade',  bladeHex);
 
     // ── Color bolts / washers / bite handle ──
     const hardwareNames = ['Bolt 1', 'Bolt 2', 'washer 1', 'washer 2', 'washer 3', 'washer 4', 'Bite Handle'];
