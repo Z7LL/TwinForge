@@ -27,77 +27,11 @@ function isMattBlack(hex: string) {
   return hex.toLowerCase() === '#111111' || hex.toLowerCase() === '#111';
 }
 
-function cloneMaterials(root: THREE.Object3D) {
-  root.traverse(child => {
-    const mesh = child as THREE.Mesh;
-    if (!mesh.isMesh) return;
-    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    const cloned = mats.map(mat => mat ? (mat as THREE.MeshStandardMaterial).clone() : mat);
-    mesh.material = Array.isArray(mesh.material) ? cloned : cloned[0];
-  });
-}
-
-function tuneMaterial(mat: THREE.MeshStandardMaterial, hex: string) {
-  const color = new THREE.Color(hex);
-  const matt = isMattBlack(hex);
-
-  mat.color = color;
-  mat.metalness = matt ? 0.08 : 0.94;
-  mat.roughness = matt ? 0.78 : 0.12;
-  mat.envMapIntensity = matt ? 0.7 : 2.35;
-  mat.needsUpdate = true;
-}
-
-function paintMesh(mesh: THREE.Mesh, hex: string) {
-  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-  mats.forEach(mat => {
-    if (!mat) return;
-    tuneMaterial(mat as THREE.MeshStandardMaterial, hex);
-  });
-}
-
-function paintNamedMesh(root: THREE.Object3D, name: string, hex: string) {
-  let found: THREE.Mesh | null = null;
-  root.traverse(obj => {
-    if (!found && obj.name === name && (obj as THREE.Mesh).isMesh) {
-      found = obj as THREE.Mesh;
-    }
-  });
-  if (found) paintMesh(found, hex);
-}
-
-function paintGroupExact(root: THREE.Object3D, groupName: string, hex: string) {
-  let group: THREE.Object3D | null = null;
-  root.traverse(obj => {
-    if (!group && obj.name === groupName) group = obj;
-  });
-  if (!group) return;
-
-  group.traverse(child => {
-    const mesh = child as THREE.Mesh;
-    if (mesh.isMesh) paintMesh(mesh, hex);
-  });
-}
-
-function findExact(root: THREE.Object3D, name: string): THREE.Object3D | undefined {
-  let found: THREE.Object3D | undefined;
-  root.traverse(obj => {
-    if (!found && obj.name === name) found = obj;
-  });
-  return found;
-}
-
 function hexToRgb(hex: string) {
   const safe = hex.replace('#', '');
-  const normalized = safe.length === 3
-    ? safe.split('').map(c => c + c).join('')
-    : safe;
-  const num = parseInt(normalized, 16);
-  return {
-    r: (num >> 16) & 255,
-    g: (num >> 8) & 255,
-    b: num & 255,
-  };
+  const normalized = safe.length === 3 ? safe.split('').map(c => c + c).join('') : safe;
+  const num = parseInt(normalized || '111111', 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
 }
 
 function rgba(hex: string, alpha: number) {
@@ -109,10 +43,76 @@ function mixHex(hexA: string, hexB: string, weight = 0.5) {
   const a = hexToRgb(hexA);
   const b = hexToRgb(hexB);
   const mix = (x: number, y: number) => Math.round(x * (1 - weight) + y * weight);
-  const r = mix(a.r, b.r);
-  const g = mix(a.g, b.g);
-  const b2 = mix(a.b, b.b);
-  return `rgb(${r}, ${g}, ${b2})`;
+  return `rgb(${mix(a.r, b.r)}, ${mix(a.g, b.g)}, ${mix(a.b, b.b)})`;
+}
+
+function luminance(hex: string) {
+  const { r, g, b } = hexToRgb(hex);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+function hueAngle(hex: string) {
+  const { r, g, b } = hexToRgb(hex);
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  const d = max - min;
+  if (d === 0) return 0;
+  let h = 0;
+  if (max === rn) h = ((gn - bn) / d) % 6;
+  else if (max === gn) h = (bn - rn) / d + 2;
+  else h = (rn - gn) / d + 4;
+  h *= 60;
+  if (h < 0) h += 360;
+  return h;
+}
+
+function cloneMaterials(root: THREE.Object3D) {
+  root.traverse(child => {
+    const mesh = child as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    const cloned = mats.map(mat => (mat ? (mat as THREE.MeshStandardMaterial).clone() : mat));
+    mesh.material = Array.isArray(mesh.material) ? cloned : cloned[0];
+  });
+}
+
+function tuneMaterial(mat: THREE.MeshStandardMaterial, hex: string) {
+  const color = new THREE.Color(hex);
+  const matt = isMattBlack(hex);
+  mat.color = color;
+  mat.metalness = matt ? 0.08 : 0.94;
+  mat.roughness = matt ? 0.78 : 0.12;
+  mat.envMapIntensity = matt ? 0.7 : 2.35;
+  mat.needsUpdate = true;
+}
+
+function paintMesh(mesh: THREE.Mesh, hex: string) {
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  mats.forEach(mat => mat && tuneMaterial(mat as THREE.MeshStandardMaterial, hex));
+}
+
+function paintNamedMesh(root: THREE.Object3D, name: string, hex: string) {
+  let found: THREE.Mesh | null = null;
+  root.traverse(obj => {
+    if (!found && obj.name === name && (obj as THREE.Mesh).isMesh) found = obj as THREE.Mesh;
+  });
+  if (found) paintMesh(found, hex);
+}
+
+function paintGroupExact(root: THREE.Object3D, groupName: string, hex: string) {
+  let group: THREE.Object3D | null = null;
+  root.traverse(obj => { if (!group && obj.name === groupName) group = obj; });
+  if (!group) return;
+  group.traverse(child => {
+    const mesh = child as THREE.Mesh;
+    if (mesh.isMesh) paintMesh(mesh, hex);
+  });
+}
+
+function findExact(root: THREE.Object3D, name: string): THREE.Object3D | undefined {
+  let found: THREE.Object3D | undefined;
+  root.traverse(obj => { if (!found && obj.name === name) found = obj; });
+  return found;
 }
 
 export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function ButterflyViewer(
@@ -138,10 +138,13 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   const keyLightRef = useRef<THREE.DirectionalLight | null>(null);
   const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
   const rimLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const hemiLightRef = useRef<THREE.HemisphereLight | null>(null);
+  const sceneReadyRef = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [modelReady, setModelReady] = useState(0);
+  const [sceneVersion, setSceneVersion] = useState(0);
 
   const dominantA = handle1Hex || '#111111';
   const dominantB = bladeHex || '#c8c9cb';
@@ -151,16 +154,14 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   const coolBlend = mixHex(handle2Hex || '#111111', '#eef2f7', 0.72);
   const baseBlend = mixHex(dominantA, dominantC, 0.82);
 
-  const gradientStyle = useMemo(() => {
-    return {
-      background: `
-        radial-gradient(460px 220px at 10% 16%, ${rgba(coolBlend, 0.78)} 0%, ${rgba(coolBlend, 0.22)} 38%, rgba(255,255,255,0) 78%),
-        radial-gradient(460px 220px at 90% 14%, ${rgba(warmBlend, 0.82)} 0%, ${rgba(warmBlend, 0.25)} 36%, rgba(255,255,255,0) 78%),
-        radial-gradient(900px 420px at 50% 24%, ${rgba(softBlend, 0.28)} 0%, rgba(255,255,255,0.92) 24%, ${rgba(baseBlend, 0.18)} 52%, rgba(255,255,255,0) 82%),
-        linear-gradient(180deg, #fbfbfc 0%, ${rgba(coolBlend, 0.16)} 30%, ${rgba(baseBlend, 0.18)} 66%, ${rgba(warmBlend, 0.22)} 100%)
-      `
-    };
-  }, [coolBlend, warmBlend, softBlend, baseBlend]);
+  const gradientStyle = useMemo(() => ({
+    background: `
+      radial-gradient(460px 220px at 10% 16%, ${rgba(coolBlend, 0.78)} 0%, ${rgba(coolBlend, 0.22)} 38%, rgba(255,255,255,0) 78%),
+      radial-gradient(460px 220px at 90% 14%, ${rgba(warmBlend, 0.82)} 0%, ${rgba(warmBlend, 0.25)} 36%, rgba(255,255,255,0) 78%),
+      radial-gradient(900px 420px at 50% 24%, ${rgba(softBlend, 0.28)} 0%, rgba(255,255,255,0.92) 24%, ${rgba(baseBlend, 0.18)} 52%, rgba(255,255,255,0) 82%),
+      linear-gradient(180deg, #fbfbfc 0%, ${rgba(coolBlend, 0.16)} 30%, ${rgba(baseBlend, 0.18)} 66%, ${rgba(warmBlend, 0.22)} 100%)
+    `
+  }), [coolBlend, warmBlend, softBlend, baseBlend]);
 
   useImperativeHandle(ref, () => ({
     zoomIn: () => {
@@ -212,14 +213,7 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
 
     const aspect = w / h;
     const F = 60;
-    const camera = new THREE.OrthographicCamera(
-      -F * aspect / 2,
-      F * aspect / 2,
-      F / 2,
-      -F / 2,
-      -1000,
-      1000
-    );
+    const camera = new THREE.OrthographicCamera(-F * aspect / 2, F * aspect / 2, F / 2, -F / 2, -1000, 1000);
     camera.position.set(0, 5.8, 52);
     camera.lookAt(0, 0, 0);
     camera.zoom = 0.245;
@@ -243,6 +237,7 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
 
     const hemi = new THREE.HemisphereLight(0xf8f7f5, 0xb99a7c, 0.95);
     scene.add(hemi);
+    hemiLightRef.current = hemi;
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.12));
 
@@ -279,6 +274,9 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     };
     animate();
 
+    sceneReadyRef.current = true;
+    setSceneVersion(v => v + 1);
+
     return () => {
       cancelAnimationFrame(frameRef.current);
       ro.disconnect();
@@ -288,21 +286,43 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     };
   }, []);
 
+  // Lighting now reacts continuously to the actual selected colors —
+  // side (left/right), height, warmth, and intensity all shift with the spec.
   useEffect(() => {
-    if (!keyLightRef.current || !fillLightRef.current || !rimLightRef.current) return;
+    const key = keyLightRef.current;
+    const fill = fillLightRef.current;
+    const rim = rimLightRef.current;
+    const hemi = hemiLightRef.current;
+    if (!key || !fill || !rim || !hemi) return;
 
-    const leftDominant = isMattBlack(handle1Hex) || isMattBlack(handle2Hex);
+    const bladeLum = luminance(bladeHex);
+    const h1Lum = luminance(handle1Hex);
+    const h2Lum = luminance(handle2Hex);
+    const avgLum = (bladeLum * 2 + h1Lum + h2Lum) / 4;
 
-    if (leftDominant) {
-      keyLightRef.current.position.set(-24, 11, 18);
-      fillLightRef.current.position.set(18, 10, 10);
-      rimLightRef.current.position.set(14, 4, -20);
-    } else {
-      keyLightRef.current.position.set(22, 11, 18);
-      fillLightRef.current.position.set(-18, 10, 10);
-      rimLightRef.current.position.set(-14, 4, -20);
-    }
-  }, [handle1Hex, handle2Hex, bladeHex]);
+    const bladeHue = hueAngle(bladeHex);
+    const handleHue = hueAngle(handle1Hex);
+
+    // Side: derived from combined hue signal so left/right shifts as colors change
+    const sideSignal = Math.sin((bladeHue + handleHue) * (Math.PI / 180));
+    const side = sideSignal >= 0 ? 1 : -1;
+    const sideStrength = 18 + Math.abs(sideSignal) * 8;
+
+    key.position.set(side * sideStrength, 10 + avgLum * 6, 18 + (1 - avgLum) * 6);
+    fill.position.set(-side * (sideStrength * 0.75), 9, 8);
+    rim.position.set(-side * (sideStrength * 0.55), 4, -20);
+
+    // Brightness/warmth respond to how light or dark the chosen colors are
+    key.intensity = 4.2 + avgLum * 1.4;
+    fill.intensity = 1.0 + (1 - avgLum) * 0.6;
+    rim.intensity = 1.1 + avgLum * 0.5;
+
+    const warmth = 1 - avgLum;
+    key.color.setHSL(0.09 + warmth * 0.02, 0.55, 0.82);
+    rim.color.setHSL(0.07 + warmth * 0.03, 0.6, 0.72);
+
+    hemi.intensity = 0.85 + avgLum * 0.25;
+  }, [handle1Hex, handle2Hex, bladeHex, screwsHex, sceneVersion]);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -351,9 +371,7 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       }
     );
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [glbSrc]);
 
   useEffect(() => {
@@ -382,15 +400,9 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       paintNamedMesh(root, 'Honycomb_Right_Handle', handle2Hex);
     }
 
-    if (bladeShape === 'Sharp_Bladeglb') {
-      paintGroupExact(root, 'Sharp_Bladeglb', bladeHex);
-    }
-    if (bladeShape === 'Knife_Bladeglb') {
-      paintGroupExact(root, 'Knife_Bladeglb', bladeHex);
-    }
-    if (bladeShape === 'Moon_Bladeglb') {
-      paintGroupExact(root, 'Moon_Bladeglb', bladeHex);
-    }
+    if (bladeShape === 'Sharp_Bladeglb') paintGroupExact(root, 'Sharp_Bladeglb', bladeHex);
+    if (bladeShape === 'Knife_Bladeglb') paintGroupExact(root, 'Knife_Bladeglb', bladeHex);
+    if (bladeShape === 'Moon_Bladeglb') paintGroupExact(root, 'Moon_Bladeglb', bladeHex);
 
     ['Bolt_1', 'Bolt_2', 'washer_1', 'washer_2', 'washer_3', 'washer_4', 'Bite_Handle']
       .forEach(name => paintNamedMesh(root, name, screwsHex));
