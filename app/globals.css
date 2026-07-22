@@ -1,0 +1,255 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 6.7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 6.7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 6.7%;
+    --primary: 0 0% 6.7%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 6.7%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 33%;
+    --accent: 19 94% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 19 94% 60%;
+    --radius: 0.375rem;
+
+    /* Brand tokens */
+    --forge-black: #111111;
+    --forge-orange: #F9733E;
+    --forge-gunmetal: #54565A;
+    --forge-white: #FFFFFF;
+    --forge-orange-hover: #e85e28;
+    --forge-surface: #F8F8F8;
+    --forge-border: #E5E5E5;
+  }
+
+  .dark {
+    --background: 0 0% 6.7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 6.7%;
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 19 94% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 19 94% 60%;
+
+    --forge-surface: #1A1A1A;
+    --forge-border: #262626;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Barlow', sans-serif;
+  }
+}
+
+/* Brand utility classes */
+@layer utilities {
+  .font-display {
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  .font-body {
+    font-family: 'Inter', sans-serif;
+  }
+  .font-heading {
+    font-family: 'Barlow', sans-serif;
+  }
+
+  .text-forge-orange { color: #F9733E; }
+  .text-forge-black { color: #111111; }
+  .text-forge-gunmetal { color: #54565A; }
+  .bg-forge-orange { background-color: #F9733E; }
+  .bg-forge-black { background-color: #111111; }
+  .bg-forge-gunmetal { background-color: #54565A; }
+  .border-forge-orange { border-color: #F9733E; }
+  .border-forge-gunmetal { border-color: #54565A; }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#F9733E] text-white font-semibold text-sm tracking-wide rounded-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#e85e28] hover:shadow-lg hover:shadow-[#F9733E]/25 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F9733E];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 border border-[#111111] text-[#111111] font-semibold text-sm tracking-wide rounded-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#111111] hover:text-white hover:shadow-lg active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-[#111111];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-white font-semibold text-sm tracking-wide rounded-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white;
+  }
+
+  .section-padding {
+    @apply px-6 py-20 md:px-12 lg:px-20 xl:px-24;
+  }
+
+  .container-max {
+    @apply max-w-7xl mx-auto;
+  }
+
+  .fade-up {
+    animation: fadeUp 0.6s ease forwards;
+  }
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes forgeLoader {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(1); transform-origin: left; }
+  51% { transform: scaleX(1); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+@keyframes spark {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-orange {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 62, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(249, 115, 62, 0); }
+}
+
+.animate-fade-in { animation: fadeIn 0.4s ease forwards; }
+.animate-slide-down { animation: slideDown 0.3s ease forwards; }
+.animate-pulse-orange { animation: pulse-orange 2s ease-in-out infinite; }
+
+/* Scroll-triggered reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #54565A; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #F9733E; }
+
+/* Model viewer styles */
+model-viewer {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+/* Swatch styles */
+.color-swatch {
+  @apply w-8 h-8 rounded-full border-2 border-transparent cursor-pointer transition-all duration-150 hover:scale-110;
+}
+.color-swatch.active {
+  @apply border-[#F9733E] scale-110 shadow-md shadow-[#F9733E]/30;
+}
+
+/* Price tag */
+.price-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+/* Nav link */
+.nav-link {
+  @apply relative text-sm font-medium text-foreground/70 hover:text-foreground transition-colors duration-200;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: #F9733E;
+  transition: width 0.25s ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* Card hover */
+.product-card {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+}
+
+/* Forge loader */
+.forge-loader-line {
+  height: 2px;
+  background: #F9733E;
+  animation: forgeLoader 1.2s ease-in-out infinite;
+}
+.forge-spark {
+  width: 6px;
+  height: 6px;
+  background: #F9733E;
+  border-radius: 50%;
+  animation: spark 1.2s ease-in-out infinite;
+}
+
+/* Input styles */
+.forge-input {
+  @apply w-full px-4 py-3 bg-transparent border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#F9733E] focus:border-transparent transition-all duration-200 placeholder:text-muted-foreground;
+}
