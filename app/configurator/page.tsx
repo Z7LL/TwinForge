@@ -6,16 +6,16 @@ import { Footer } from '@/components/Footer';
 import { ButterflyViewer, type ButterflyViewerHandle } from '@/components/ButterflyViewer';
 import {
   calculatePrice, calculateLeadDays, estimateShipDate, buildShareUrl,
-  COLOR_SWATCHES, HANDLE_STYLES, HANDLE_FINISHES, BLADE_SHAPES,
+  COLOR_SWATCHES, HANDLE_STYLES, BLADE_SHAPES,
   BLADE_FINISHES, SCREWS_COLORS, WEIGHTS,
-  DEFAULT_CONFIG, BUTTERFLY_GLB_PATH, findOption, getColorHex,
+  DEFAULT_CONFIG, BUTTERFLY_GLB_PATH, getColorHex,
   formatPrice, parseConfigFromUrl,
   type ConfigState,
 } from '@/lib/configurator';
 import { useCurrency } from '@/hooks/use-currency';
 import { useCart } from '@/components/cart-context';
 import {
-  RotateCcw, ZoomIn, ZoomOut, Share2, ShoppingCart, Check, Shield, Clock,
+  RotateCcw, ZoomIn, ZoomOut, Share2, ShoppingCart, Check, Shield, Clock, Sparkles,
 } from 'lucide-react';
 
 export default function ConfiguratorPage() {
@@ -76,6 +76,7 @@ export default function ConfiguratorPage() {
         weight: weightName,
       },
     });
+
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
   };
@@ -96,27 +97,29 @@ export default function ConfiguratorPage() {
     <>
       <Navigation />
       <main className="pt-16 min-h-screen bg-background">
-        {/* Header */}
         <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-16 z-30">
           <div className="container-max px-6 md:px-12 py-4">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h1 className="text-heading-md font-heading font-bold text-foreground">Butterfly Trainer Configurator</h1>
-                <p className="text-xs text-muted-foreground mt-0.5">3D-printed PLA trainer. Safe for all ages. Build yours — updates in real time.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Build your TwinForge balisong with live color updates, blade styling, and a warm product preview.
+                </p>
               </div>
-              <button onClick={reset} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                onClick={reset}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <RotateCcw className="w-3.5 h-3.5" /> Reset
               </button>
             </div>
           </div>
         </div>
 
-        {/* Main grid: left = live view, right = all options */}
         <div className="container-max px-6 md:px-12 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
-            {/* LEFT: Live 3D viewer */}
             <div className="lg:sticky lg:top-[140px] self-start">
-              <div className="relative rounded-xl border border-border bg-gradient-to-br from-muted/20 to-background dark:from-white/[0.02] dark:to-transparent overflow-hidden h-[600px]">
+              <div className="relative rounded-2xl border border-[#e7c8a0] bg-gradient-to-br from-[#fff4e5] via-[#f8ead7] to-[#f2dcc1] overflow-hidden h-[640px] shadow-[0_30px_80px_rgba(163,101,39,0.12)]">
                 <ButterflyViewer
                   ref={viewerRef}
                   glbSrc={BUTTERFLY_GLB_PATH}
@@ -129,31 +132,26 @@ export default function ConfiguratorPage() {
                   className="absolute inset-0"
                 />
 
-                {/* Zoom controls */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                  <button onClick={() => zoom('in')} className="p-2 rounded-md bg-background/90 backdrop-blur border border-border hover:border-[#F9733E] transition-colors" aria-label="Zoom in">
+                  <button onClick={() => zoom('in')} className="p-2 rounded-md bg-white/85 backdrop-blur border border-[#edd4b6] hover:border-[#F9733E] transition-colors" aria-label="Zoom in">
                     <ZoomIn className="w-4 h-4" />
                   </button>
-                  <button onClick={() => zoom('out')} className="p-2 rounded-md bg-background/90 backdrop-blur border border-border hover:border-[#F9733E] transition-colors" aria-label="Zoom out">
+                  <button onClick={() => zoom('out')} className="p-2 rounded-md bg-white/85 backdrop-blur border border-[#edd4b6] hover:border-[#F9733E] transition-colors" aria-label="Zoom out">
                     <ZoomOut className="w-4 h-4" />
                   </button>
                 </div>
 
-                {/* Live badge */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-md bg-background/90 backdrop-blur border border-border z-10">
-                  <div className="w-2 h-2 rounded-full bg-[#F9733E]" />
-                  <span className="text-xs font-semibold text-foreground">Live preview</span>
-                  <span className="text-xs text-muted-foreground">· drag to rotate</span>
+                <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-full bg-white/82 backdrop-blur border border-[#efd2ad] z-10">
+                  <Sparkles className="w-3.5 h-3.5 text-[#F9733E]" />
+                  <span className="text-xs font-semibold text-[#6d4b2f]">Sunlit live preview</span>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT: All options */}
             <div className="space-y-8">
-              {/* 1. Blade */}
-              <Section title="Blade" desc="All trainers are 3D-printed from PLA plastic. Pick the blade silhouette.">
+              <Section title="Blade" desc="Choose from three clean blade silhouettes with independent blade color finishing.">
                 <Label>Blade shape</Label>
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="grid grid-cols-1 gap-3 mb-6">
                   {BLADE_SHAPES.map(opt => (
                     <OptionCard
                       key={opt.id}
@@ -163,12 +161,11 @@ export default function ConfiguratorPage() {
                       priceDelta={opt.price}
                       priceFormatter={fmt}
                       desc={opt.desc}
-                      compact
                     />
                   ))}
                 </div>
 
-                <Label>Blade finish</Label>
+                <Label>Blade color</Label>
                 <div className="grid grid-cols-2 gap-3">
                   {BLADE_FINISHES.map(opt => (
                     <button
@@ -180,7 +177,7 @@ export default function ConfiguratorPage() {
                           : 'border-border hover:border-foreground/30'
                       }`}
                     >
-                      <div className="w-full h-8 rounded mb-2" style={{ backgroundColor: (opt as any).hex || '#54565A' }} />
+                      <div className="w-full h-8 rounded mb-2" style={{ backgroundColor: opt.hex || '#54565A' }} />
                       <p className="text-sm font-semibold text-foreground">{opt.name}</p>
                       {opt.price > 0 && <p className="text-xs text-[#F9733E] font-semibold mt-0.5">+{fmt(opt.price)}</p>}
                     </button>
@@ -188,8 +185,7 @@ export default function ConfiguratorPage() {
                 </div>
               </Section>
 
-              {/* 2. Handle */}
-              <Section title="Handle" desc="Choose the pattern, then set each handle's color independently.">
+              <Section title="Handles" desc="Pick your handle texture, then customize left and right colors separately.">
                 <Label>Handle pattern</Label>
                 <div className="grid grid-cols-1 gap-3 mb-6">
                   {HANDLE_STYLES.map(opt => (
@@ -205,29 +201,14 @@ export default function ConfiguratorPage() {
                   ))}
                 </div>
 
-                <Label>Handle finish</Label>
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  {HANDLE_FINISHES.map(opt => (
-                    <OptionCard
-                      key={opt.id}
-                      active={config.handleFinish === opt.id}
-                      onClick={() => update('handleFinish', opt.id)}
-                      title={opt.name}
-                      priceDelta={opt.price}
-                      priceFormatter={fmt}
-                      compact
-                    />
-                  ))}
-                </div>
-
-                <Label>Handle 1 color <span className="text-muted-foreground normal-case font-normal">(left)</span></Label>
+                <Label>Left handle color</Label>
                 <ColorPicker
                   selectedId={config.handleColor}
                   onSelect={id => update('handleColor', id)}
                 />
 
                 <div className="mt-6">
-                  <Label>Handle 2 color <span className="text-muted-foreground normal-case font-normal">(right)</span></Label>
+                  <Label>Right handle color</Label>
                   <ColorPicker
                     selectedId={config.biteHandleColor}
                     onSelect={id => update('biteHandleColor', id)}
@@ -235,9 +216,8 @@ export default function ConfiguratorPage() {
                 </div>
               </Section>
 
-              {/* 3. Screws & pins */}
-              <Section title="Screws, pins & bite handle" desc="Dial in the hardware color. Small details, big feel.">
-                <Label>Screw & pin color</Label>
+              <Section title="Hardware" desc="Fine-tune the screws, pivots, washers, and bite handle accent.">
+                <Label>Hardware color</Label>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {SCREWS_COLORS.map(opt => (
                     <button
@@ -247,7 +227,7 @@ export default function ConfiguratorPage() {
                         config.screwsColor === opt.id ? 'border-[#F9733E] bg-[#F9733E]/5' : 'border-border hover:border-foreground/30'
                       }`}
                     >
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: (opt as any).hex }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: opt.hex }} />
                       <span className="text-sm font-semibold text-foreground">{opt.name}</span>
                       {opt.price > 0 && <span className="text-xs text-[#F9733E] font-semibold">+{fmt(opt.price)}</span>}
                     </button>
@@ -255,8 +235,7 @@ export default function ConfiguratorPage() {
                 </div>
               </Section>
 
-              {/* 4. Tune */}
-              <Section title="Tune" desc="The feel of a flip lives here. Tune the momentum.">
+              <Section title="Balance" desc="Choose the feel you want in hand, from light and agile to heavy and planted.">
                 <Label>Weight & balance</Label>
                 <div className="grid grid-cols-1 gap-3">
                   {WEIGHTS.map(opt => (
@@ -273,7 +252,6 @@ export default function ConfiguratorPage() {
                 </div>
               </Section>
 
-              {/* Summary + actions */}
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="p-6 border-b border-border bg-muted/30">
                   <div className="flex items-center justify-between mb-1">
@@ -309,7 +287,7 @@ export default function ConfiguratorPage() {
 
                 <div className="px-6 pb-6 flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield className="w-3.5 h-3.5 text-[#F9733E]" />
-                  3D-printed PLA trainer · Safe for all ages
+                  3D-printed PLA trainer · Made to order
                 </div>
               </div>
             </div>
