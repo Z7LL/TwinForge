@@ -7,7 +7,7 @@ export interface ColorOption {
 export interface OptionChoice {
   id: string;
   name: string;
-  price: number; // in OMR
+  price: number;
   leadDays: number;
   desc?: string;
   icon?: string;
@@ -18,7 +18,6 @@ export interface ConfigState {
   model: string;
   handleStyle: string;
   handleColor: string;
-  handleFinish: string;
   bladeShape: string;
   bladeFinish: string;
   screwsColor: string;
@@ -26,12 +25,11 @@ export interface ConfigState {
   weight: string;
 }
 
-// ── Currency system (base currency: OMR) ──────────────────────────────────
 export interface Currency {
   code: string;
   symbol: string;
   name: string;
-  rate: number; // 1 OMR = rate * this currency
+  rate: number;
   locale: string;
 }
 
@@ -79,17 +77,10 @@ export const HANDLE_STYLES: OptionChoice[] = [
   { id: 'arrow', name: 'Arrow Serrated', price: 3, leadDays: 1, desc: 'Directional serrations lock into your palm.', icon: 'arrow' },
 ];
 
-export const HANDLE_FINISHES: OptionChoice[] = [
-  { id: 'matte', name: 'Matte', price: 0, leadDays: 0 },
-  { id: 'brushed', name: 'Brushed', price: 2, leadDays: 1 },
-  { id: 'satin', name: 'Satin', price: 4, leadDays: 1 },
-];
-
 export const BLADE_SHAPES: OptionChoice[] = [
-  { id: 'tanto', name: 'Tanto', price: 5, leadDays: 1, desc: 'Angular tip. Strong pierce profile.' },
-  { id: 'clip', name: 'Clip-point', price: 5, leadDays: 1, desc: 'Sweeping spine. Classic flipper look.' },
-  { id: 'straight', name: 'Straight', price: 3, leadDays: 0, desc: 'Clean utility edge. Balanced feel.' },
-  { id: 'trainer-blunt', name: 'Trainer (Blunt)', price: 0, leadDays: 0, desc: 'Rounded edge. Safe for practice.' },
+  { id: 'tanto', name: 'Tanto', price: 5, leadDays: 1, desc: 'Angular tip with a bold tactical profile.' },
+  { id: 'clip', name: 'Clip point', price: 5, leadDays: 1, desc: 'Classic clipped spine with a sharp, agile tip.' },
+  { id: 'drop-point', name: 'Drop point', price: 3, leadDays: 0, desc: 'Smooth, versatile curve with a clean everyday silhouette.' },
 ];
 
 export const BLADE_FINISHES: OptionChoice[] = [
@@ -122,8 +113,7 @@ export const DEFAULT_CONFIG: ConfigState = {
   model: 'trainer',
   handleStyle: 'honeycomb',
   handleColor: 'matt-black',
-  handleFinish: 'matte',
-  bladeShape: 'trainer-blunt',
+  bladeShape: 'drop-point',
   bladeFinish: 'matt-black',
   screwsColor: 'matt-black',
   biteHandleColor: 'matt-black',
@@ -141,7 +131,8 @@ export function findColor(id: string): ColorOption | undefined {
 }
 
 export function getColorHex(id: string): string {
-  const color = COLOR_SWATCHES.find(c => c.id === id);
+  const color = COLOR_SWATCHES.find(c => c.id === id)
+    || BLADE_FINISHES.find(c => c.id === id);
   return color?.hex || '#111111';
 }
 
@@ -153,9 +144,6 @@ export function calculatePrice(config: ConfigState): { total: number; breakdown:
 
   const handle = findOption(HANDLE_STYLES, config.handleStyle);
   if (handle && handle.price > 0) breakdown.push({ label: `${handle.name} handle`, price: handle.price });
-
-  const finish = findOption(HANDLE_FINISHES, config.handleFinish);
-  if (finish && finish.price > 0) breakdown.push({ label: `${finish.name} finish`, price: finish.price });
 
   const blade = findOption(BLADE_SHAPES, config.bladeShape);
   if (blade && blade.price > 0) breakdown.push({ label: `${blade.name} blade`, price: blade.price });
@@ -178,9 +166,8 @@ export function calculateLeadDays(config: ConfigState): number {
   const model = findOption(MODELS, config.model);
   if (model) days = Math.max(days, model.leadDays);
 
-  [HANDLE_STYLES, HANDLE_FINISHES, BLADE_SHAPES, BLADE_FINISHES, SCREWS_COLORS, WEIGHTS].forEach(list => {
+  [HANDLE_STYLES, BLADE_SHAPES, BLADE_FINISHES, SCREWS_COLORS, WEIGHTS].forEach(list => {
     const key = list === HANDLE_STYLES ? config.handleStyle
-      : list === HANDLE_FINISHES ? config.handleFinish
       : list === BLADE_SHAPES ? config.bladeShape
       : list === BLADE_FINISHES ? config.bladeFinish
       : list === SCREWS_COLORS ? config.screwsColor
