@@ -27,25 +27,21 @@ function isMattBlack(hex: string) {
   return hex.toLowerCase() === '#111111' || hex.toLowerCase() === '#111';
 }
 
-// Clone the material on every mesh so shared GLB materials become independent.
 function cloneMaterials(root: THREE.Object3D) {
   root.traverse(child => {
     const mesh = child as THREE.Mesh;
     if (!mesh.isMesh) return;
     const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    const cloned = mats.map(mat => {
-      if (!mat) return mat;
-      return (mat as THREE.MeshStandardMaterial).clone();
-    });
+    const cloned = mats.map(mat => mat ? (mat as THREE.MeshStandardMaterial).clone() : mat);
     mesh.material = Array.isArray(mesh.material) ? cloned : cloned[0];
   });
 }
 
-// Set color + finish properties on a single mesh's material(s)
 function paintMesh(mesh: THREE.Mesh, hex: string) {
   const color = new THREE.Color(hex);
   const matt = isMattBlack(hex);
   const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
   mats.forEach(mat => {
     if (!mat) return;
     const m = mat as THREE.MeshStandardMaterial;
@@ -57,64 +53,36 @@ function paintMesh(mesh: THREE.Mesh, hex: string) {
   });
 }
 
-// Find a node anywhere in the tree whose name EXACTLY matches, then paint it as a mesh.
-// Falls back to case-insensitive exact match if strict match misses.
 function paintNamedMesh(root: THREE.Object3D, name: string, hex: string) {
-  let mesh: THREE.Mesh | null = null;
-  // First pass: exact match
+  let found: THREE.Mesh | null = null;
   root.traverse(obj => {
-    if (!mesh && obj.name === name && (obj as THREE.Mesh).isMesh) {
-      mesh = obj as THREE.Mesh;
+    if (!found && obj.name === name && (obj as THREE.Mesh).isMesh) {
+      found = obj as THREE.Mesh;
     }
   });
-  // Second pass: case-insensitive match
-  if (!mesh) {
-    const lower = name.toLowerCase();
-    root.traverse(obj => {
-      if (!mesh && obj.name.toLowerCase() === lower && (obj as THREE.Mesh).isMesh) {
-        mesh = obj as THREE.Mesh;
-      }
-    });
-  }
-  if (mesh) paintMesh(mesh, hex);
+  if (found) paintMesh(found, hex);
 }
 
-// Find a group/node anywhere in the tree by substring (case-insensitive),
-// then paint all meshes inside it.
-function paintGroupBySubstring(root: THREE.Object3D, substring: string, hex: string) {
-  const lower = substring.toLowerCase();
-  let found: THREE.Object3D | null = null;
+function paintGroupExact(root: THREE.Object3D, groupName: string, hex: string) {
+  let group: THREE.Object3D | null = null;
   root.traverse(obj => {
-    if (!found && obj.name.toLowerCase().includes(lower)) {
-      found = obj;
-    }
+    if (!group && obj.name === groupName) group = obj;
   });
-  if (!found) return;
-  (found as THREE.Object3D).traverse(child => {
+
+  if (!group) return;
+
+  group.traverse(child => {
     const mesh = child as THREE.Mesh;
     if (mesh.isMesh) paintMesh(mesh, hex);
   });
 }
 
-// Find a node anywhere in the full tree by substring (case-insensitive).
-// Returns the first match.
-function findBySubstring(root: THREE.Object3D, substring: string): THREE.Object3D | undefined {
-  const lower = substring.toLowerCase();
+function findExact(root: THREE.Object3D, name: string): THREE.Object3D | undefined {
   let found: THREE.Object3D | undefined;
   root.traverse(obj => {
-    if (!found && obj.name.toLowerCase().includes(lower)) {
-      found = obj;
-    }
+    if (!found && obj.name === name) found = obj;
   });
   return found;
-}
-
-// Dev helper — logs every node name once so you can verify exact names from your GLB
-function debugNodeNames(root: THREE.Object3D) {
-  if (process.env.NODE_ENV !== 'development') return;
-  const names: string[] = [];
-  root.traverse(obj => { if (obj.name) names.push(`[${obj.type}] ${obj.name}`); });
-  console.log('[ButterflyViewer] node names:\n' + names.join('\n'));
 }
 
 export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function ButterflyViewer(
@@ -159,11 +127,11 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       const ctrl = controlsRef.current;
       if (!cam || !ctrl) return;
       cam.zoom = 0.21;
+      cam.updateProjectionMatrix();
       ctrl.reset();
     },
   }), []);
 
-  // ── Init renderer / scene / camera / controls ──────────────────────────
   useEffect(() => {
     const el = mountRef.current;
     if (!el) return;
@@ -185,17 +153,16 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
 
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
-    const envTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = envTexture;
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
 
     const aspect = w / h;
-    const frustumSize = 60;
+    const F = 60;
     const camera = new THREE.OrthographicCamera(
-      -frustumSize * aspect / 2,
-       frustumSize * aspect / 2,
-       frustumSize / 2,
-      -frustumSize / 2,
+      -F * aspect / 2,
+       F * aspect / 2,
+       F / 2,
+      -F / 2,
       -1000,
        1000
     );
@@ -205,22 +172,16 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     camera.updateProjectionMatrix();
     cameraRef.current = camera;
 
-    const key = new THREE.DirectionalLight(0xfff5e8, 3.0);
-    key.position.set(8, 12, 10);
-    scene.add(key);
+    const addLight = (color: number, intensity: number, x: number, y: number, z: number) => {
+      const l = new THREE.DirectionalLight(color, intensity);
+      l.position.set(x, y, z);
+      scene.add(l);
+    };
 
-    const fill = new THREE.DirectionalLight(0xe8f0ff, 1.5);
-    fill.position.set(-10, 6, 6);
-    scene.add(fill);
-
-    const rim = new THREE.DirectionalLight(0xffffff, 2.0);
-    rim.position.set(0, -8, -12);
-    scene.add(rim);
-
-    const top = new THREE.DirectionalLight(0xffffff, 1.2);
-    top.position.set(0, 15, 0);
-    scene.add(top);
-
+    addLight(0xfff5e8, 3.0, 8, 12, 10);
+    addLight(0xe8f0ff, 1.5, -10, 6, 6);
+    addLight(0xffffff, 2.0, 0, -8, -12);
+    addLight(0xffffff, 1.2, 0, 15, 0);
     scene.add(new THREE.AmbientLight(0xffffff, 0.35));
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -240,11 +201,10 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       const nw = el.clientWidth;
       const nh = el.clientHeight;
       const a = nw / nh;
-      const f = frustumSize;
-      camera.left   = -f * a / 2;
-      camera.right  =  f * a / 2;
-      camera.top    =  f / 2;
-      camera.bottom = -f / 2;
+      camera.left = -F * a / 2;
+      camera.right = F * a / 2;
+      camera.top = F / 2;
+      camera.bottom = -F / 2;
       camera.updateProjectionMatrix();
       renderer.setSize(nw, nh);
     });
@@ -266,7 +226,6 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     };
   }, []);
 
-  // ── Load GLB ───────────────────────────────────────────────────────────
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
@@ -288,19 +247,12 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
         if (cancelled) return;
         const root = gltf.scene;
 
-        // Center model at origin
         const box = new THREE.Box3().setFromObject(root);
         const center = new THREE.Vector3();
         box.getCenter(center);
         root.position.sub(center);
 
-        // Clone all materials so each mesh has its own independent material.
-        // The GLB shares materials between left/right handles — without this,
-        // painting one handle overwrites the other.
         cloneMaterials(root);
-
-        // Log all node names in dev so you can verify exact names from the GLB.
-        debugNodeNames(root);
 
         scene.add(root);
         modelRootRef.current = root;
@@ -320,56 +272,44 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     return () => { cancelled = true; };
   }, [glbSrc]);
 
-  // ── Apply visibility + colors ──────────────────────────────────────────
   useEffect(() => {
     const root = modelRootRef.current;
     if (!root) return;
 
-    // ── Find handle groups anywhere in the full tree by substring ──
-    // This is robust: works whether Blender exported them as top-level nodes
-    // or nested, and regardless of whether '.glb' was appended to the name.
-    const arrowGroup     = findBySubstring(root, 'Arrow Pattern');
-    const honeycombGroup = findBySubstring(root, 'Honeycomb Pattern')
-                        ?? findBySubstring(root, 'Honycomb Pattern')
-                        ?? findBySubstring(root, 'Honeycomb');
+    const arrowGroup = findExact(root, '2_Arrow_Pattern_Handles_+_Improvedglb');
+    const honeycombGroup = findExact(root, '2_Honeycomb_Pattern_Handles_+_Improvedglb');
 
-    if (arrowGroup)     arrowGroup.visible     = handleStyle === 'arrow';
-    if (honeycombGroup) honeycombGroup.visible  = handleStyle === 'honeycomb';
+    if (arrowGroup) arrowGroup.visible = handleStyle === 'arrow';
+    if (honeycombGroup) honeycombGroup.visible = handleStyle === 'honeycomb';
 
-    // ── Find blade groups anywhere in the full tree by substring ──
-    const sharpBlade = findBySubstring(root, 'Sharp Blade');
-    const knifeBlade = findBySubstring(root, 'Knife Blade');
-    const moonBlade  = findBySubstring(root, 'Moon Blade');
+    const sharpBlade = findExact(root, 'Sharp_Bladeglb');
+    const knifeBlade = findExact(root, 'Knife_Bladeglb');
+    const moonBlade = findExact(root, 'Moon_Bladeglb');
 
     if (sharpBlade) sharpBlade.visible = bladeShape === 'tanto';
     if (knifeBlade) knifeBlade.visible = bladeShape === 'clip';
-    if (moonBlade)  moonBlade.visible  = bladeShape === 'straight' || bladeShape === 'trainer-blunt';
+    if (moonBlade) moonBlade.visible = bladeShape === 'straight' || bladeShape === 'trainer-blunt';
 
-    // ── Color handles ──
-    // Try both correct spelling and the typo variant from the GLB export.
     if (handleStyle === 'arrow') {
-      // Try exact names first, then substring fallback
-      paintNamedMesh(root, 'Arrow Left Handle',  handle1Hex);
-      paintNamedMesh(root, 'Arrow Right Handle', handle2Hex);
+      paintNamedMesh(root, 'Arrow_Left_Handle', handle1Hex);
+      paintNamedMesh(root, 'Arrow_Right_Handle', handle2Hex);
     } else {
-      // Honeycomb — try both spellings (GLB may have 'Honycomb' typo)
-      paintNamedMesh(root, 'Honycomb Left Handle',  handle1Hex);
-      paintNamedMesh(root, 'Honycomb Right Handle', handle2Hex);
-      // Fallback with correct spelling in case GLB is fixed later
-      paintNamedMesh(root, 'Honeycomb Left Handle',  handle1Hex);
-      paintNamedMesh(root, 'Honeycomb Right Handle', handle2Hex);
+      paintNamedMesh(root, 'Honycomb_Left_Handle', handle1Hex);
+      paintNamedMesh(root, 'Honycomb_Right_Handle', handle2Hex);
     }
 
-    // ── Color active blade ──
-    // paintGroupBySubstring searches the full tree, so '.glb' suffix in node
-    // names is no longer a problem.
-    if (bladeShape === 'tanto')                                           paintGroupBySubstring(root, 'Sharp Blade', bladeHex);
-    if (bladeShape === 'clip')                                            paintGroupBySubstring(root, 'Knife Blade', bladeHex);
-    if (bladeShape === 'straight' || bladeShape === 'trainer-blunt')     paintGroupBySubstring(root, 'Moon Blade',  bladeHex);
+    if (bladeShape === 'tanto') {
+      paintGroupExact(root, 'Sharp_Bladeglb', bladeHex);
+    }
+    if (bladeShape === 'clip') {
+      paintGroupExact(root, 'Knife_Bladeglb', bladeHex);
+    }
+    if (bladeShape === 'straight' || bladeShape === 'trainer-blunt') {
+      paintGroupExact(root, 'Moon_Bladeglb', bladeHex);
+    }
 
-    // ── Color bolts / washers / bite handle ──
-    const hardwareNames = ['Bolt 1', 'Bolt 2', 'washer 1', 'washer 2', 'washer 3', 'washer 4', 'Bite Handle'];
-    hardwareNames.forEach(name => paintNamedMesh(root, name, screwsHex));
+    ['Bolt_1', 'Bolt_2', 'washer_1', 'washer_2', 'washer_3', 'washer_4', 'Bite_Handle']
+      .forEach(name => paintNamedMesh(root, name, screwsHex));
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelReady, handleStyle, bladeShape, handle1Hex, handle2Hex, bladeHex, screwsHex]);
