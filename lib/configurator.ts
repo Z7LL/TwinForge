@@ -12,6 +12,7 @@ export interface OptionChoice {
   desc?: string;
   icon?: string;
   hex?: string;
+  displayName?: string;
 }
 
 export interface ConfigState {
@@ -38,7 +39,7 @@ export const CURRENCIES: Currency[] = [
   { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham', rate: 9.55, locale: 'ar-AE' },
   { code: 'SAR', symbol: 'ر.س', name: 'Saudi Riyal', rate: 9.75, locale: 'ar-SA' },
   { code: 'KWD', symbol: 'د.ك', name: 'Kuwaiti Dinar', rate: 0.79, locale: 'ar-KW' },
-  { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', rate: 9.52, locale: 'ar-QA' },
+  { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Rial', rate: 9.52, locale: 'ar-QA' },
   { code: 'BHD', symbol: 'د.ب', name: 'Bahraini Dinar', rate: 0.97, locale: 'ar-BH' },
   { code: 'EUR', symbol: '€', name: 'Euro', rate: 2.42, locale: 'en-IE' },
   { code: 'USD', symbol: '$', name: 'US Dollar', rate: 2.60, locale: 'en-US' },
@@ -78,9 +79,30 @@ export const HANDLE_STYLES: OptionChoice[] = [
 ];
 
 export const BLADE_SHAPES: OptionChoice[] = [
-  { id: 'tanto', name: 'Tanto', price: 5, leadDays: 1, desc: 'Angular tip with a bold tactical profile.' },
-  { id: 'clip', name: 'Clip point', price: 5, leadDays: 1, desc: 'Classic clipped spine with a sharp, agile tip.' },
-  { id: 'drop-point', name: 'Drop point', price: 3, leadDays: 0, desc: 'Smooth, versatile curve with a clean everyday silhouette.' },
+  {
+    id: 'Sharp_Bladeglb',
+    name: 'Sharp_Bladeglb',
+    displayName: 'Tanto',
+    price: 5,
+    leadDays: 1,
+    desc: 'Angular tip with a strong tactical profile.',
+  },
+  {
+    id: 'Knife_Bladeglb',
+    name: 'Knife_Bladeglb',
+    displayName: 'Clip point',
+    price: 5,
+    leadDays: 1,
+    desc: 'Classic clipped spine with a sharper, more agile tip.',
+  },
+  {
+    id: 'Moon_Bladeglb',
+    name: 'Moon_Bladeglb',
+    displayName: 'Drop point',
+    price: 3,
+    leadDays: 0,
+    desc: 'Smooth all-round profile with a stronger everyday-use tip.',
+  },
 ];
 
 export const BLADE_FINISHES: OptionChoice[] = [
@@ -113,7 +135,7 @@ export const DEFAULT_CONFIG: ConfigState = {
   model: 'trainer',
   handleStyle: 'honeycomb',
   handleColor: 'matt-black',
-  bladeShape: 'drop-point',
+  bladeShape: 'Moon_Bladeglb',
   bladeFinish: 'matt-black',
   screwsColor: 'matt-black',
   biteHandleColor: 'matt-black',
@@ -146,7 +168,7 @@ export function calculatePrice(config: ConfigState): { total: number; breakdown:
   if (handle && handle.price > 0) breakdown.push({ label: `${handle.name} handle`, price: handle.price });
 
   const blade = findOption(BLADE_SHAPES, config.bladeShape);
-  if (blade && blade.price > 0) breakdown.push({ label: `${blade.name} blade`, price: blade.price });
+  if (blade && blade.price > 0) breakdown.push({ label: `${blade.displayName || blade.name} blade`, price: blade.price });
 
   const bladeFinish = findOption(BLADE_FINISHES, config.bladeFinish);
   if (bladeFinish && bladeFinish.price > 0) breakdown.push({ label: `${bladeFinish.name} finish`, price: bladeFinish.price });
