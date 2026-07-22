@@ -46,9 +46,9 @@ function paintMesh(mesh: THREE.Mesh, hex: string) {
     if (!mat) return;
     const m = mat as THREE.MeshStandardMaterial;
     m.color = color;
-    m.metalness = matt ? 0.08 : 0.88;
-    m.roughness = matt ? 0.82 : 0.18;
-    m.envMapIntensity = matt ? 0.5 : 1.8;
+    m.metalness = matt ? 0.06 : 0.9;
+    m.roughness = matt ? 0.84 : 0.16;
+    m.envMapIntensity = matt ? 0.55 : 1.95;
     m.needsUpdate = true;
   });
 }
@@ -68,7 +68,6 @@ function paintGroupExact(root: THREE.Object3D, groupName: string, hex: string) {
   root.traverse(obj => {
     if (!group && obj.name === groupName) group = obj;
   });
-
   if (!group) return;
 
   group.traverse(child => {
@@ -113,13 +112,13 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     zoomIn: () => {
       const cam = cameraRef.current;
       if (!cam) return;
-      cam.zoom = Math.min(cam.zoom * 1.2, 5);
+      cam.zoom = Math.min(cam.zoom * 1.18, 5);
       cam.updateProjectionMatrix();
     },
     zoomOut: () => {
       const cam = cameraRef.current;
       if (!cam) return;
-      cam.zoom = Math.max(cam.zoom / 1.2, 0.02);
+      cam.zoom = Math.max(cam.zoom / 1.18, 0.02);
       cam.updateProjectionMatrix();
     },
     resetView: () => {
@@ -142,20 +141,19 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.28;
+    renderer.toneMappingExposure = 1.24;
     rendererRef.current = renderer;
     el.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#f4e3cf');
-    scene.fog = new THREE.Fog('#f4e3cf', 65, 110);
     sceneRef.current = scene;
 
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.028).texture;
     pmrem.dispose();
 
     const aspect = w / h;
@@ -174,22 +172,30 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     camera.updateProjectionMatrix();
     cameraRef.current = camera;
 
-    const sun = new THREE.DirectionalLight(0xffe2b8, 4.8);
-    sun.position.set(18, 20, 16);
-    scene.add(sun);
+    const key = new THREE.DirectionalLight(0xffe1bc, 4.35);
+    key.position.set(18, 22, 16);
+    scene.add(key);
 
-    const skyFill = new THREE.DirectionalLight(0xfff5ea, 1.9);
-    skyFill.position.set(-14, 10, 12);
-    scene.add(skyFill);
+    const fill = new THREE.DirectionalLight(0xfff8f1, 1.55);
+    fill.position.set(-16, 10, 14);
+    scene.add(fill);
 
-    const rim = new THREE.DirectionalLight(0xffc58a, 1.6);
-    rim.position.set(-8, 2, -16);
+    const rim = new THREE.DirectionalLight(0xf6c991, 1.15);
+    rim.position.set(-10, 4, -18);
     scene.add(rim);
 
-    const hemi = new THREE.HemisphereLight(0xffefd6, 0xd7b18a, 1.4);
+    const hemi = new THREE.HemisphereLight(0xfff3df, 0xcba57a, 1.08);
     scene.add(hemi);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.32));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(120, 120),
+      new THREE.ShadowMaterial({ color: 0x7a5c3c, opacity: 0.06 })
+    );
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -18;
+    scene.add(shadowPlane);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -258,8 +264,9 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
         const center = new THREE.Vector3();
         box.getCenter(center);
         root.position.sub(center);
-        root.rotation.y = -0.12;
-        root.scale.setScalar(1.04);
+        root.rotation.y = -0.1;
+        root.rotation.z = -0.02;
+        root.scale.setScalar(1.045);
 
         cloneMaterials(root);
 
@@ -278,7 +285,9 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       }
     );
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [glbSrc]);
 
   useEffect(() => {
@@ -327,20 +336,27 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     <div
       className={`relative w-full h-full overflow-hidden ${className}`}
       style={{
-        background:
-          'radial-gradient(circle at 50% 18%, rgba(255,244,220,0.95) 0%, rgba(248,220,180,0.85) 28%, rgba(237,188,132,0.48) 52%, rgba(255,255,255,0) 70%), linear-gradient(180deg, #fff2de 0%, #f7e5cf 38%, #f1dcc0 100%)'
+        background: `
+          radial-gradient(1200px 520px at 50% 14%, rgba(255, 248, 239, 0.98) 0%, rgba(255, 240, 220, 0.92) 18%, rgba(247, 226, 197, 0.78) 38%, rgba(245, 225, 199, 0.38) 56%, rgba(245, 225, 199, 0) 72%),
+          radial-gradient(900px 380px at 50% 86%, rgba(214, 184, 150, 0.18) 0%, rgba(214, 184, 150, 0.10) 28%, rgba(214, 184, 150, 0.04) 48%, rgba(214, 184, 150, 0) 72%),
+          linear-gradient(180deg, #fffaf4 0%, #f8ecdd 34%, #f3e1cc 68%, #efdbc4 100%)
+        `
       }}
     >
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#d7b38e]/35 via-[#edc9a5]/10 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.04)_38%,rgba(255,255,255,0)_66%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#d9b792]/20 via-[#e7c79f]/8 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/18 to-transparent pointer-events-none" />
       <div ref={mountRef} className="w-full h-full relative z-[1]" />
+
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] z-[2]">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/18 backdrop-blur-[2px] z-[2]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-9 h-9 border-2 border-[#F9733E] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-semibold text-[#7f5a34] tracking-wide">Loading preview…</span>
+            <span className="text-xs font-semibold text-[#735438] tracking-wide">Loading preview…</span>
           </div>
         </div>
       )}
+
       {error && (
         <div className="absolute inset-0 flex items-center justify-center z-[2]">
           <p className="text-sm text-[#8b6846]">Model unavailable</p>
