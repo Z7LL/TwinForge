@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -44,7 +44,7 @@ function tuneMaterial(mat: THREE.MeshStandardMaterial, hex: string) {
   mat.color = color;
   mat.metalness = matt ? 0.08 : 0.94;
   mat.roughness = matt ? 0.78 : 0.12;
-  mat.envMapIntensity = matt ? 0.65 : 2.25;
+  mat.envMapIntensity = matt ? 0.7 : 2.35;
   mat.needsUpdate = true;
 }
 
@@ -87,6 +87,34 @@ function findExact(root: THREE.Object3D, name: string): THREE.Object3D | undefin
   return found;
 }
 
+function hexToRgb(hex: string) {
+  const safe = hex.replace('#', '');
+  const normalized = safe.length === 3
+    ? safe.split('').map(c => c + c).join('')
+    : safe;
+  const num = parseInt(normalized, 16);
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255,
+  };
+}
+
+function rgba(hex: string, alpha: number) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function mixHex(hexA: string, hexB: string, weight = 0.5) {
+  const a = hexToRgb(hexA);
+  const b = hexToRgb(hexB);
+  const mix = (x: number, y: number) => Math.round(x * (1 - weight) + y * weight);
+  const r = mix(a.r, b.r);
+  const g = mix(a.g, b.g);
+  const b2 = mix(a.b, b.b);
+  return `rgb(${r}, ${g}, ${b2})`;
+}
+
 export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function ButterflyViewer(
   {
     glbSrc,
@@ -107,9 +135,32 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   const controlsRef = useRef<OrbitControls | null>(null);
   const frameRef = useRef<number>(0);
   const modelRootRef = useRef<THREE.Group | null>(null);
+  const keyLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const rimLightRef = useRef<THREE.DirectionalLight | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [modelReady, setModelReady] = useState(0);
+
+  const dominantA = handle1Hex || '#111111';
+  const dominantB = bladeHex || '#c8c9cb';
+  const dominantC = screwsHex || '#c8c9cb';
+  const softBlend = mixHex(dominantA, dominantB, 0.5);
+  const warmBlend = mixHex(bladeHex || '#c8c9cb', '#ffd9b8', 0.45);
+  const coolBlend = mixHex(handle2Hex || '#111111', '#eef2f7', 0.72);
+  const baseBlend = mixHex(dominantA, dominantC, 0.82);
+
+  const gradientStyle = useMemo(() => {
+    return {
+      background: `
+        radial-gradient(460px 220px at 10% 16%, ${rgba(coolBlend, 0.78)} 0%, ${rgba(coolBlend, 0.22)} 38%, rgba(255,255,255,0) 78%),
+        radial-gradient(460px 220px at 90% 14%, ${rgba(warmBlend, 0.82)} 0%, ${rgba(warmBlend, 0.25)} 36%, rgba(255,255,255,0) 78%),
+        radial-gradient(900px 420px at 50% 24%, ${rgba(softBlend, 0.28)} 0%, rgba(255,255,255,0.92) 24%, ${rgba(baseBlend, 0.18)} 52%, rgba(255,255,255,0) 82%),
+        linear-gradient(180deg, #fbfbfc 0%, ${rgba(coolBlend, 0.16)} 30%, ${rgba(baseBlend, 0.18)} 66%, ${rgba(warmBlend, 0.22)} 100%)
+      `
+    };
+  }, [coolBlend, warmBlend, softBlend, baseBlend]);
 
   useImperativeHandle(ref, () => ({
     zoomIn: () => {
@@ -147,7 +198,7 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 1.14;
     rendererRef.current = renderer;
     el.appendChild(renderer.domElement);
 
@@ -175,30 +226,25 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     camera.updateProjectionMatrix();
     cameraRef.current = camera;
 
-    const key = new THREE.DirectionalLight(0xffedd6, 4.8);
-    key.position.set(16, 22, 18);
+    const key = new THREE.DirectionalLight(0xfff1de, 4.9);
+    key.position.set(-22, 12, 20);
     scene.add(key);
+    keyLightRef.current = key;
 
-    const fill = new THREE.DirectionalLight(0xeef4ff, 1.35);
-    fill.position.set(-18, 8, 10);
+    const fill = new THREE.DirectionalLight(0xe8eef8, 1.2);
+    fill.position.set(18, 9, 8);
     scene.add(fill);
+    fillLightRef.current = fill;
 
-    const topAccentLeft = new THREE.PointLight(0xfff4e8, 0.9, 80, 2);
-    topAccentLeft.position.set(-22, 22, 16);
-    scene.add(topAccentLeft);
-
-    const topAccentRight = new THREE.PointLight(0xffe2bf, 1.1, 80, 2);
-    topAccentRight.position.set(22, 20, 14);
-    scene.add(topAccentRight);
-
-    const rim = new THREE.DirectionalLight(0xf4c48c, 1.25);
-    rim.position.set(-8, 4, -18);
+    const rim = new THREE.DirectionalLight(0xf7c791, 1.35);
+    rim.position.set(16, 4, -20);
     scene.add(rim);
+    rimLightRef.current = rim;
 
-    const hemi = new THREE.HemisphereLight(0xfaf6ef, 0xb99472, 1.0);
+    const hemi = new THREE.HemisphereLight(0xf8f7f5, 0xb99a7c, 0.95);
     scene.add(hemi);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.14));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.12));
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -241,6 +287,22 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
     };
   }, []);
+
+  useEffect(() => {
+    if (!keyLightRef.current || !fillLightRef.current || !rimLightRef.current) return;
+
+    const leftDominant = isMattBlack(handle1Hex) || isMattBlack(handle2Hex);
+
+    if (leftDominant) {
+      keyLightRef.current.position.set(-24, 11, 18);
+      fillLightRef.current.position.set(18, 10, 10);
+      rimLightRef.current.position.set(14, 4, -20);
+    } else {
+      keyLightRef.current.position.set(22, 11, 18);
+      fillLightRef.current.position.set(-18, 10, 10);
+      rimLightRef.current.position.set(-14, 4, -20);
+    }
+  }, [handle1Hex, handle2Hex, bladeHex]);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -337,22 +399,11 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   }, [modelReady, handleStyle, bladeShape, handle1Hex, handle2Hex, bladeHex, screwsHex]);
 
   return (
-    <div
-      className={`relative w-full h-full overflow-hidden ${className}`}
-      style={{
-        background: `
-          radial-gradient(420px 180px at 12% 8%, rgba(255,255,255,0.85) 0%, rgba(255,248,240,0.42) 38%, rgba(255,248,240,0) 76%),
-          radial-gradient(420px 180px at 88% 10%, rgba(255,234,210,0.82) 0%, rgba(255,228,202,0.38) 36%, rgba(255,228,202,0) 76%),
-          radial-gradient(860px 360px at 50% 18%, rgba(255,255,255,0.92) 0%, rgba(242,242,244,0.88) 22%, rgba(221,224,229,0.68) 46%, rgba(214,208,202,0.22) 66%, rgba(214,208,202,0) 82%),
-          linear-gradient(180deg, #fbfbfc 0%, #eeeff2 34%, #dddfe4 62%, #cfc8c1 100%)
-        `
-      }}
-    >
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.06)_34%,rgba(255,255,255,0)_68%)]" />
-      <div className="absolute left-[6%] top-[3%] h-24 w-40 rounded-full bg-white/45 blur-3xl pointer-events-none" />
-      <div className="absolute right-[6%] top-[4%] h-24 w-40 rounded-full bg-[#ffd9b8]/35 blur-3xl pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#9f8a76]/16 via-[#c8b6a5]/10 to-transparent pointer-events-none" />
+    <div className={`relative w-full h-full overflow-hidden ${className}`} style={gradientStyle}>
+      <div className="absolute left-[4%] top-[6%] h-28 w-44 rounded-full bg-white/45 blur-3xl pointer-events-none" />
+      <div className="absolute right-[5%] top-[7%] h-28 w-44 rounded-full bg-white/30 blur-3xl pointer-events-none" />
       <div className="absolute inset-x-[18%] bottom-[8%] h-16 rounded-full bg-black/8 blur-3xl pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/8 via-transparent to-transparent pointer-events-none" />
       <div ref={mountRef} className="w-full h-full relative z-[1]" />
 
       {loading && (
