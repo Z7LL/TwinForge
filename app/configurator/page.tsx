@@ -127,7 +127,7 @@ export default function ConfiguratorPage() {
         <div className="container-max px-6 md:px-12 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
             <div className="lg:sticky lg:top-[140px] self-start">
-              <div className="relative rounded-2xl border border-[#e7c8a0] bg-gradient-to-br from-[#fff4e5] via-[#f8ead7] to-[#f2dcc1] overflow-hidden h-[640px] shadow-[0_30px_80px_rgba(163,101,39,0.12)]">
+              <div className="relative rounded-2xl overflow-hidden h-[640px] shadow-[0_24px_64px_rgba(0,0,0,0.14)] ring-1 ring-black/[0.08]">
                 <ButterflyViewer
                   ref={viewerRef}
                   glbSrc={BUTTERFLY_GLB_PATH}

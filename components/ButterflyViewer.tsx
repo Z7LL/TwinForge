@@ -23,27 +23,25 @@ interface Props {
   className?: string;
 }
 
-function isMattBlack(hex: string) {
-  return hex.toLowerCase() === '#111111' || hex.toLowerCase() === '#111';
-}
-
 function hexToRgb(hex: string) {
   const safe = hex.replace('#', '');
-  const normalized = safe.length === 3 ? safe.split('').map(c => c + c).join('') : safe;
-  const num = parseInt(normalized || '111111', 16);
+  const n = safe.length === 3 ? safe.split('').map(c => c + c).join('') : safe;
+  const num = parseInt(n || '111111', 16);
   return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
 }
 
 function rgba(hex: string, alpha: number) {
   const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function mixHex(hexA: string, hexB: string, weight = 0.5) {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  const mix = (x: number, y: number) => Math.round(x * (1 - weight) + y * weight);
-  return `rgb(${mix(a.r, b.r)}, ${mix(a.g, b.g)}, ${mix(a.b, b.b)})`;
+/** Lighten a hex toward white so the blob isn't too saturated */
+function lighten(hex: string, amount = 0.55) {
+  const { r, g, b } = hexToRgb(hex);
+  const lr = Math.round(r + (255 - r) * amount);
+  const lg = Math.round(g + (255 - g) * amount);
+  const lb = Math.round(b + (255 - b) * amount);
+  return `rgb(${lr},${lg},${lb})`;
 }
 
 function luminance(hex: string) {
@@ -51,29 +49,35 @@ function luminance(hex: string) {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 
+function isMattBlack(hex: string) {
+  return luminance(hex) < 0.12;
+}
+
 function cloneMaterials(root: THREE.Object3D) {
   root.traverse(child => {
     const mesh = child as THREE.Mesh;
     if (!mesh.isMesh) return;
     const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    const cloned = mats.map(mat => (mat ? (mat as THREE.MeshStandardMaterial).clone() : mat));
+    const cloned = mats.map(m => (m ? (m as THREE.MeshStandardMaterial).clone() : m));
     mesh.material = Array.isArray(mesh.material) ? cloned : cloned[0];
   });
 }
 
 function tuneMaterial(mat: THREE.MeshStandardMaterial, hex: string) {
-  const color = new THREE.Color(hex);
   const matt = isMattBlack(hex);
-  mat.color = color;
-  mat.metalness = matt ? 0.08 : 0.94;
-  mat.roughness = matt ? 0.78 : 0.12;
-  mat.envMapIntensity = matt ? 0.7 : 2.35;
+  mat.color = new THREE.Color(hex);
+  // Matte black: low metalness, high roughness — diffuse shading reveals relief.
+  // Metallic/colored: high metalness, low roughness — specular glints trace edges.
+  mat.metalness = matt ? 0.05 : 0.92;
+  mat.roughness = matt ? 0.72 : 0.18;
+  // envMap gives the reflective base; direct lights add the revealing highlights.
+  mat.envMapIntensity = matt ? 0.5 : 1.6;
   mat.needsUpdate = true;
 }
 
 function paintMesh(mesh: THREE.Mesh, hex: string) {
   const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-  mats.forEach(mat => mat && tuneMaterial(mat as THREE.MeshStandardMaterial, hex));
+  mats.forEach(m => m && tuneMaterial(m as THREE.MeshStandardMaterial, hex));
 }
 
 function paintNamedMesh(root: THREE.Object3D, name: string, hex: string) {
@@ -91,14 +95,13 @@ function paintGroupExact(root: THREE.Object3D, groupName: string, hex: string) {
     if (obj.name === groupName) {
       found = true;
       obj.traverse(child => {
-        const mesh = child as THREE.Mesh;
-        if (mesh.isMesh) paintMesh(mesh, hex);
+        if ((child as THREE.Mesh).isMesh) paintMesh(child as THREE.Mesh, hex);
       });
     }
   });
 }
 
-function findExact(root: THREE.Object3D, name: string): THREE.Object3D | undefined {
+function findExact(root: THREE.Object3D, name: string) {
   let found: THREE.Object3D | undefined;
   root.traverse(obj => { if (!found && obj.name === name) found = obj; });
   return found;
@@ -124,30 +127,40 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
   const controlsRef = useRef<OrbitControls | null>(null);
   const frameRef = useRef<number>(0);
   const modelRootRef = useRef<THREE.Group | null>(null);
-  const keyLightRef = useRef<THREE.DirectionalLight | null>(null);
-  const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
-  const rimLightRef = useRef<THREE.DirectionalLight | null>(null);
-  const sceneReadyRef = useRef(false);
+
+  // Individual light refs for reactive updates
+  const keyRef = useRef<THREE.DirectionalLight | null>(null);
+  const fillRef = useRef<THREE.DirectionalLight | null>(null);
+  const rimRef = useRef<THREE.DirectionalLight | null>(null);
+  const grazeRef = useRef<THREE.DirectionalLight | null>(null);
+  const ambRef = useRef<THREE.AmbientLight | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [modelReady, setModelReady] = useState(0);
-  const [sceneVersion, setSceneVersion] = useState(0);
+  const [sceneReady, setSceneReady] = useState(false);
 
-  // Clean, subtle studio backdrop — tints very gently based on handle color
-  const dominantA = handle1Hex || '#111111';
-  const dominantB = bladeHex || '#c8c9cb';
-  const softBlend = mixHex(dominantA, dominantB, 0.5);
-  const coolBlend = mixHex(handle2Hex || '#111111', '#eef2f7', 0.85);
-  const warmBlend = mixHex(bladeHex || '#c8c9cb', '#fff5e8', 0.7);
-
-  const gradientStyle = useMemo(() => ({
-    background: `
-      radial-gradient(600px 300px at 30% 20%, ${rgba(coolBlend, 0.35)} 0%, rgba(255,255,255,0) 60%),
-      radial-gradient(500px 280px at 75% 30%, ${rgba(warmBlend, 0.28)} 0%, rgba(255,255,255,0) 55%),
-      linear-gradient(180deg, #fafafa 0%, #f5f5f7 50%, #f0f0f2 100%)
-    `
-  }), [coolBlend, warmBlend]);
+  // ── Dynamic blurry gradient background ──────────────────────────────────
+  // Each color blob maps to one of the user's selected colors, lightened so
+  // the background stays soft. The blobs are placed at different positions
+  // so the composition always has movement. CSS filter:blur on the blob layer
+  // creates the soft bleed effect — the 3D canvas sits transparently on top.
+  const blobStyle = useMemo(() => {
+    const c1 = lighten(handle1Hex, 0.5);
+    const c2 = lighten(handle2Hex, 0.45);
+    const c3 = lighten(bladeHex, 0.48);
+    const c4 = lighten(screwsHex, 0.52);
+    return {
+      background: `
+        radial-gradient(ellipse 70% 55% at 18% 25%, ${rgba(handle1Hex, 0.72)} 0%, transparent 65%),
+        radial-gradient(ellipse 65% 50% at 82% 18%, ${rgba(bladeHex, 0.68)} 0%, transparent 60%),
+        radial-gradient(ellipse 60% 48% at 72% 78%, ${rgba(handle2Hex, 0.65)} 0%, transparent 58%),
+        radial-gradient(ellipse 55% 45% at 22% 80%, ${rgba(screwsHex, 0.55)} 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, ${rgba(bladeHex, 0.30)} 0%, transparent 50%),
+        linear-gradient(135deg, ${c1} 0%, ${c3} 35%, ${c2} 65%, ${c4} 100%)
+      `,
+    };
+  }, [handle1Hex, handle2Hex, bladeHex, screwsHex]);
 
   useImperativeHandle(ref, () => ({
     zoomIn: () => {
@@ -172,10 +185,7 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     },
   }), []);
 
-  // ── Init: professional 3-point studio lighting ────────────────────────
-  // Key light from front-left-upper at ~40° — rakes across blade bevels
-  // and handle texture to reveal geometry. Fill from right at low intensity
-  // to soften shadows without flattening. Rim from behind to separate edges.
+  // ── Scene + lighting init ────────────────────────────────────────────────
   useEffect(() => {
     const el = mountRef.current;
     if (!el) return;
@@ -186,53 +196,71 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Transparent canvas — CSS gradient background shows through
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.18;
     rendererRef.current = renderer;
     el.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
+    // Studio environment — moderate intensity so it doesn't drown directional lights
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
 
     const aspect = w / h;
     const F = 60;
     const camera = new THREE.OrthographicCamera(-F * aspect / 2, F * aspect / 2, F / 2, -F / 2, -1000, 1000);
-    camera.position.set(0, 5.8, 52);
+    camera.position.set(0, 6, 52);
     camera.lookAt(0, 0, 0);
     camera.zoom = 0.245;
     camera.updateProjectionMatrix();
     cameraRef.current = camera;
 
-    // Key — warm white, strong, front-left-upper. This is the primary
-    // light that rakes across the blade surface to show bevels and edges.
-    const key = new THREE.DirectionalLight(0xfff4e8, 3.6);
-    key.position.set(-16, 14, 18);
+    // ── 5-light setup for surface-detail revelation ────────────────────────
+    //
+    // KEY — front-left, elevated ~45°. Main illumination. Warm white.
+    // Positioned so it hits the face of the blade at roughly 45° angle,
+    // catching the bevel edge as a bright highlight.
+    const key = new THREE.DirectionalLight(0xfff8f0, 4.2);
+    key.position.set(-12, 18, 22);
     scene.add(key);
-    keyLightRef.current = key;
+    keyRef.current = key;
 
-    // Fill — cool, soft, from front-right. Lifts shadows on the opposite
-    // side without killing the directional contrast from the key.
-    const fill = new THREE.DirectionalLight(0xe8edf5, 0.8);
-    fill.position.set(14, 6, 10);
+    // FILL — soft, front-right, low elevation. Lifts shadow side without
+    // killing contrast. Cool tint balances the warm key.
+    const fill = new THREE.DirectionalLight(0xdde8ff, 1.1);
+    fill.position.set(18, 4, 14);
     scene.add(fill);
-    fillLightRef.current = fill;
+    fillRef.current = fill;
 
-    // Rim — warm, from behind-upper. Creates a highlight along the top
-    // edge of handles and blade spine, separating the object from the bg.
-    const rim = new THREE.DirectionalLight(0xffe8d0, 1.2);
-    rim.position.set(4, 10, -16);
+    // GRAZE — almost horizontal, from the LEFT side at blade-level height.
+    // This is the critical light for texture: it rakes across honeycomb/arrow
+    // relief at a very shallow angle (~10–15°), casting tiny shadows into
+    // every recess and making the pattern jump out visually.
+    const graze = new THREE.DirectionalLight(0xffe0c8, 2.8);
+    graze.position.set(-26, 2, 8);
+    scene.add(graze);
+    grazeRef.current = graze;
+
+    // RIM — from behind-upper-right. Traces the spine of the blade and the
+    // outer edge of handles with a bright highlight, separating the object
+    // from the background and giving it a premium product-photo look.
+    const rim = new THREE.DirectionalLight(0xfff0e0, 1.8);
+    rim.position.set(8, 16, -20);
     scene.add(rim);
-    rimLightRef.current = rim;
+    rimRef.current = rim;
 
-    // Very low ambient — we want directional shadows, not flat even light.
-    scene.add(new THREE.AmbientLight(0xffffff, 0.08));
+    // AMBIENT — kept very low so the directional contrast is preserved.
+    // Too much ambient flattens everything and kills the texture illusion.
+    const amb = new THREE.AmbientLight(0xffffff, 0.06);
+    scene.add(amb);
+    ambRef.current = amb;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -253,8 +281,6 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
       const a = nw / nh;
       camera.left = -F * a / 2;
       camera.right = F * a / 2;
-      camera.top = F / 2;
-      camera.bottom = -F / 2;
       camera.updateProjectionMatrix();
       renderer.setSize(nw, nh);
     });
@@ -267,8 +293,7 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     };
     animate();
 
-    sceneReadyRef.current = true;
-    setSceneVersion(v => v + 1);
+    setSceneReady(true);
 
     return () => {
       cancelAnimationFrame(frameRef.current);
@@ -279,38 +304,34 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     };
   }, []);
 
-  // ── Reactive lighting: intensity & warmth adapt to material darkness ──
-  // Positions stay stable (no disorienting shifts). Only brightness and
-  // subtle warmth change so dark builds get slightly more light and warm
-  // builds get slightly cooler fill for natural contrast.
+  // ── Reactive lighting: adapt intensity to material brightness ───────────
+  // Dark / matte builds absorb light; we boost all sources so detail still
+  // reads. Bright / metallic builds need less light to avoid blowout.
   useEffect(() => {
-    const key = keyLightRef.current;
-    const fill = fillLightRef.current;
-    const rim = rimLightRef.current;
-    if (!key || !fill || !rim) return;
+    if (!sceneReady) return;
+    const key = keyRef.current;
+    const fill = fillRef.current;
+    const rim = rimRef.current;
+    const graze = grazeRef.current;
+    const amb = ambRef.current;
+    if (!key || !fill || !rim || !graze || !amb) return;
 
-    const bladeLum = luminance(bladeHex);
-    const h1Lum = luminance(handle1Hex);
-    const h2Lum = luminance(handle2Hex);
-    const avgLum = (bladeLum * 2 + h1Lum + h2Lum) / 4;
+    const lumBlade = luminance(bladeHex);
+    const lumH1 = luminance(handle1Hex);
+    const lumH2 = luminance(handle2Hex);
+    // Blade surface gets double weight since it's the hero element
+    const avgLum = (lumBlade * 2 + lumH1 + lumH2) / 4;
+    const dark = 1 - avgLum; // 0 = bright, 1 = dark
 
-    // Darker materials need more light to show surface detail.
-    // Brighter materials need less to avoid blowout.
-    const darkness = 1 - avgLum;
+    key.intensity = 3.8 + dark * 1.4;
+    fill.intensity = 0.9 + dark * 0.5;
+    rim.intensity = 1.6 + dark * 0.6;
+    // Graze light is most critical for matte/dark builds where texture is hardest to see
+    graze.intensity = 2.4 + dark * 1.8;
+    amb.intensity = 0.04 + dark * 0.08;
+  }, [handle1Hex, handle2Hex, bladeHex, screwsHex, sceneReady]);
 
-    key.intensity = 3.2 + darkness * 1.0;
-    fill.intensity = 0.6 + darkness * 0.4;
-    rim.intensity = 1.0 + darkness * 0.4;
-
-    // Subtle warmth shift: dark/matt builds get slightly warmer key
-    // (like a studio softbox), bright/silk builds stay neutral-cool.
-    const warmth = darkness * 0.04;
-    key.color.setHSL(0.08 + warmth, 0.5, 0.85);
-    fill.color.setHSL(0.58 - warmth * 0.3, 0.12, 0.88);
-    rim.color.setHSL(0.06 + warmth, 0.4, 0.78);
-  }, [handle1Hex, handle2Hex, bladeHex, screwsHex, sceneVersion]);
-
-  // ── Load GLB ───────────────────────────────────────────────────────────
+  // ── Load GLB ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
@@ -324,25 +345,20 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     }
 
     let cancelled = false;
-    const loader = new GLTFLoader();
-
-    loader.load(
+    new GLTFLoader().load(
       glbSrc,
       gltf => {
         if (cancelled) return;
         const root = gltf.scene;
-
         const box = new THREE.Box3().setFromObject(root);
         const center = new THREE.Vector3();
         box.getCenter(center);
         root.position.sub(center);
-
-        root.rotation.y = -0.12;
+        // Slight angle so the blade bevel catches the key light as a highlight
+        root.rotation.y = -0.15;
         root.rotation.z = -0.02;
         root.scale.setScalar(1.05);
-
         cloneMaterials(root);
-
         scene.add(root);
         modelRootRef.current = root;
         setLoading(false);
@@ -361,21 +377,19 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
     return () => { cancelled = true; };
   }, [glbSrc]);
 
-  // ── Apply visibility + colors ──────────────────────────────────────────
+  // ── Apply visibility + colors ─────────────────────────────────────────────
   useEffect(() => {
     const root = modelRootRef.current;
     if (!root) return;
 
     const arrowGroup = findExact(root, '2_Arrow_Pattern_Handles_+_Improvedglb');
     const honeycombGroup = findExact(root, '2_Honeycomb_Pattern_Handles_+_Improvedglb');
-
     if (arrowGroup) arrowGroup.visible = handleStyle === 'arrow';
     if (honeycombGroup) honeycombGroup.visible = handleStyle === 'honeycomb';
 
     const sharpBlade = findExact(root, 'Sharp_Bladeglb');
     const knifeBlade = findExact(root, 'Knife_Bladeglb');
     const moonBlade = findExact(root, 'Moon_Bladeglb');
-
     if (sharpBlade) sharpBlade.visible = bladeShape === 'Sharp_Bladeglb';
     if (knifeBlade) knifeBlade.visible = bladeShape === 'Knife_Bladeglb';
     if (moonBlade) moonBlade.visible = bladeShape === 'Moon_Bladeglb';
@@ -394,26 +408,34 @@ export const ButterflyViewer = forwardRef<ButterflyViewerHandle, Props>(function
 
     ['Bolt_1', 'Bolt_2', 'washer_1', 'washer_2', 'washer_3', 'washer_4', 'Bite_Handle']
       .forEach(name => paintNamedMesh(root, name, screwsHex));
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelReady, handleStyle, bladeShape, handle1Hex, handle2Hex, bladeHex, screwsHex]);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden ${className}`} style={gradientStyle}>
-      <div ref={mountRef} className="w-full h-full relative z-[1]" />
+    <div className={`relative w-full h-full overflow-hidden ${className}`}>
+      {/* Blurry gradient layer — behind the transparent 3D canvas */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{ ...blobStyle, filter: 'blur(48px)', transform: 'scale(1.12)' }}
+      />
+      {/* Subtle white veil to prevent blobs from being too garish */}
+      <div className="absolute inset-0 z-0 bg-white/30" />
+
+      {/* 3D canvas — transparent background so CSS gradient shows through */}
+      <div ref={mountRef} className="absolute inset-0 z-[1]" />
 
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-[2px] z-[2]">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[2px] z-[2]">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-[#F9733E] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-medium text-neutral-400 tracking-wide">Loading preview…</span>
+            <div className="w-7 h-7 border-2 border-[#F9733E] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-medium text-neutral-500 tracking-wide">Loading…</span>
           </div>
         </div>
       )}
 
       {error && (
         <div className="absolute inset-0 flex items-center justify-center z-[2]">
-          <p className="text-sm text-neutral-400">Model unavailable</p>
+          <p className="text-sm text-neutral-500">Model unavailable</p>
         </div>
       )}
     </div>
