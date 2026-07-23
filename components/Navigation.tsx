@@ -11,7 +11,6 @@ import { useCart } from '@/components/cart-context';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/configurator', label: 'Configurator' },
   { href: '/shop', label: 'Shop' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
@@ -125,14 +124,14 @@ export function Navigation() {
 
               {/* CTA */}
               <Link
-                href="/configurator"
+                href="/shop"
                 className={`hidden md:inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all duration-200 hover:-translate-y-0.5 ${
                   forceWhite
                     ? 'bg-[#F9733E] text-white hover:bg-[#e85e28]'
                     : 'bg-[#F9733E] text-white hover:bg-[#e85e28]'
                 }`}
               >
-                Customize
+                Shop
               </Link>
 
               {/* Mobile menu toggle */}
@@ -169,11 +168,11 @@ export function Navigation() {
             </nav>
 
             <Link
-              href="/configurator"
+              href="/shop"
               onClick={() => setMobileOpen(false)}
               className="btn-primary w-full justify-center mt-6 py-4 text-base"
             >
-              Start Customizing
+              Browse the Shop
             </Link>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { ProductModelViewer } from '@/components/ProductModelViewer';
 import { ScrollReveal } from '@/components/ScrollReveal';
-import { Check, ArrowRight, Filter, Search, SlidersHorizontal, ShoppingBag } from 'lucide-react';
+import { Check, ArrowRight, ShoppingBag, Wrench } from 'lucide-react';
 import { useCurrency } from '@/hooks/use-currency';
 import { useCart } from '@/components/cart-context';
 import { formatPrice } from '@/lib/configurator';
@@ -14,7 +14,7 @@ import { formatPrice } from '@/lib/configurator';
 interface Product {
   id: string;
   name: string;
-  category: 'trainer' | 'shell' | 'fidget' | 'accessory';
+  category: 'trainer' | 'shell';
   price: number;
   status: 'available' | 'coming-soon';
   model?: string;
@@ -35,35 +35,9 @@ const PRODUCTS: Product[] = [
     model: '/assets/models/1_Honeycomb_Pattern_Handles_+_Improved.glb',
     material: 'PLA plastic',
     customLevel: 'full',
-    features: ['Honeycomb grip', 'Safe PLA plastic', 'Tunable balance'],
-    desc: 'The flagship. Fully customizable 3D-printed PLA butterfly trainer. Safe for all ages.',
+    features: ['Fully customizable', 'Honeycomb or arrow grip', 'Safe PLA plastic', 'Tunable balance'],
+    desc: 'Our flagship. A fully customizable 3D-printed PLA butterfly trainer. Pick your blade shape, handle pattern, colors, hardware, and weight.',
     tag: 'Bestseller',
-  },
-  {
-    id: 'arrow-trainer',
-    name: 'Arrow Handle Trainer',
-    category: 'trainer',
-    price: 37,
-    status: 'available',
-    model: '/assets/models/1_Arrow_Pattern_Handles_+_Improved.glb',
-    material: 'PLA plastic',
-    customLevel: 'full',
-    features: ['Serrated grip', 'Lightweight', 'Arrow pattern'],
-    desc: 'Directional serrations for a locked-in feel.',
-    tag: 'New',
-  },
-  {
-    id: 'arrow-pro',
-    name: 'Arrow Pro Trainer',
-    category: 'trainer',
-    price: 46,
-    status: 'available',
-    model: '/assets/models/2_Arrow_Pattern_Handles_+_Improved.glb',
-    material: 'PLA plastic',
-    customLevel: 'full',
-    features: ['Reinforced', 'Heavier flip', 'Pro balance'],
-    desc: 'Beefier build for momentum-driven tricks.',
-    tag: 'Premium',
   },
   {
     id: 'viper-mini-shell',
@@ -73,56 +47,15 @@ const PRODUCTS: Product[] = [
     status: 'coming-soon',
     material: 'PLA plastic',
     customLevel: 'partial',
-    features: ['Viper Mini compatible', 'Custom colors', 'Lighter shell'],
-    desc: 'Replacement shell for the Viper Mini mouse. Color it your way.',
+    features: ['Viper Mini compatible', 'Custom colors', 'Lighter shell', 'Easy snap-fit'],
+    desc: 'A custom replacement shell for the Viper Mini mouse. Color it your way. Launching soon.',
+    tag: 'Coming soon',
   },
-  {
-    id: 'screw-kit',
-    name: 'Screw & Pin Kit',
-    category: 'accessory',
-    price: 5,
-    status: 'available',
-    material: 'PLA plastic',
-    customLevel: 'fixed',
-    features: ['Hex / Torx / Flat', '3 colors', 'Spare pins'],
-    desc: 'Full hardware refresh. Mix heads and colors.',
-  },
-];
-
-const CATEGORIES = [
-  { id: 'all', label: 'All' },
-  { id: 'trainer', label: 'Trainers' },
-  { id: 'shell', label: 'Shell Mods' },
-  { id: 'fidget', label: 'Fidget' },
-  { id: 'accessory', label: 'Accessories' },
-];
-
-const MATERIALS = ['all', 'PLA plastic'];
-const CUSTOM_LEVELS = [
-  { id: 'all', label: 'Any' },
-  { id: 'full', label: 'Fully custom' },
-  { id: 'partial', label: 'Partial' },
-  { id: 'fixed', label: 'Fixed' },
 ];
 
 export default function ShopPage() {
-  const [category, setCategory] = useState('all');
-  const [material, setMaterial] = useState('all');
-  const [customLevel, setCustomLevel] = useState('all');
-  const [maxPrice, setMaxPrice] = useState(60);
-  const [showFilters, setShowFilters] = useState(false);
   const { currencyCode } = useCurrency();
   const fmt = (omr: number) => formatPrice(omr, currencyCode);
-
-  const filtered = useMemo(() => {
-    return PRODUCTS.filter(p => {
-      if (category !== 'all' && p.category !== category) return false;
-      if (material !== 'all' && p.material !== material) return false;
-      if (customLevel !== 'all' && p.customLevel !== customLevel) return false;
-      if (p.price > maxPrice) return false;
-      return true;
-    });
-  }, [category, material, customLevel, maxPrice]);
 
   return (
     <>
@@ -134,120 +67,41 @@ export default function ShopPage() {
             <ScrollReveal className="max-w-2xl">
               <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">The Shop</p>
               <h1 className="text-display-md font-heading font-extrabold text-foreground">
-                The current lineup.
+                Custom 3D-printed hardware.
               </h1>
               <p className="text-lg text-muted-foreground mt-4">
-                Trainers, shell mods, fidget toys, and hardware. Built to order,
-                shipped from the forge. Filter by what matters to you.
+                Made-to-order products, built in Oman and shipped worldwide.
+                More custom products coming soon.
               </p>
             </ScrollReveal>
           </div>
         </section>
 
-        {/* Filters + grid */}
+        {/* Product grid */}
         <section className="section-padding">
           <div className="container-max">
-            <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
-              {/* Filters sidebar */}
-              <aside className="lg:sticky lg:top-20 self-start">
-                <div className="rounded-xl border border-border bg-card p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-sm font-heading font-bold text-foreground flex items-center gap-2">
-                      <Filter className="w-4 h-4" /> Filters
-                    </h2>
-                    <button
-                      onClick={() => { setCategory('all'); setMaterial('all'); setCustomLevel('all'); setMaxPrice(60); }}
-                      className="text-xs text-muted-foreground hover:text-[#F9733E] transition-colors"
-                    >
-                      Clear
-                    </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {PRODUCTS.map((product, i) => (
+                <ScrollReveal key={product.id} delay={i * 100}>
+                  <ProductCard product={product} fmt={fmt} />
+                </ScrollReveal>
+              ))}
+
+              {/* More coming soon card */}
+              <ScrollReveal delay={PRODUCTS.length * 100}>
+                <div className="h-full rounded-lg border border-dashed border-border bg-card/50 flex flex-col items-center justify-center p-10 text-center min-h-[420px]">
+                  <div className="w-14 h-14 rounded-full bg-[#F9733E]/10 flex items-center justify-center mb-4">
+                    <Wrench className="w-6 h-6 text-[#F9733E]" />
                   </div>
-
-                  <FilterGroup label="Category">
-                    <div className="flex flex-col gap-1.5">
-                      {CATEGORIES.map(c => (
-                        <button
-                          key={c.id}
-                          onClick={() => setCategory(c.id)}
-                          className={`text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
-                            category === c.id ? 'bg-[#F9733E]/10 text-[#F9733E] font-semibold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
-                        >
-                          {c.label}
-                        </button>
-                      ))}
-                    </div>
-                  </FilterGroup>
-
-                  <FilterGroup label="Material">
-                    <div className="flex flex-col gap-1.5">
-                      {MATERIALS.map(m => (
-                        <button
-                          key={m}
-                          onClick={() => setMaterial(m)}
-                          className={`text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
-                            material === m ? 'bg-[#F9733E]/10 text-[#F9733E] font-semibold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
-                        >
-                          {m === 'all' ? 'Any material' : m}
-                        </button>
-                      ))}
-                    </div>
-                  </FilterGroup>
-
-                  <FilterGroup label="Customization">
-                    <div className="flex flex-col gap-1.5">
-                      {CUSTOM_LEVELS.map(c => (
-                        <button
-                          key={c.id}
-                          onClick={() => setCustomLevel(c.id)}
-                          className={`text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
-                            customLevel === c.id ? 'bg-[#F9733E]/10 text-[#F9733E] font-semibold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
-                        >
-                          {c.label}
-                        </button>
-                      ))}
-                    </div>
-                  </FilterGroup>
-
-                  <FilterGroup label={`Max price: ${fmt(maxPrice)}`}>
-                    <input
-                      type="range"
-                      min={5}
-                      max={60}
-                      step={5}
-                      value={maxPrice}
-                      onChange={e => setMaxPrice(Number(e.target.value))}
-                      className="w-full accent-[#F9733E]"
-                    />
-                  </FilterGroup>
+                  <h3 className="text-heading-md font-heading font-semibold text-foreground mb-2">
+                    More coming soon
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+                    We&apos;re expanding the lineup with new custom products.
+                    Fidget toys, accessories, and more — all 3D-printed and made to order.
+                  </p>
                 </div>
-              </aside>
-
-              {/* Grid */}
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <p className="text-sm text-muted-foreground">{filtered.length} product{filtered.length !== 1 && 's'}</p>
-                </div>
-
-                {filtered.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border p-16 text-center">
-                    <p className="text-muted-foreground">No products match these filters.</p>
-                    <button onClick={() => { setCategory('all'); setMaterial('all'); setCustomLevel('all'); setMaxPrice(150); }} className="mt-3 text-sm font-semibold text-[#F9733E] hover:underline">
-                      Clear filters
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {filtered.map((product, i) => (
-                      <ScrollReveal key={product.id} delay={(i % 3) * 80}>
-                        <ProductCard product={product} />
-                      </ScrollReveal>
-                    ))}
-                  </div>
-                )}
-              </div>
+              </ScrollReveal>
             </div>
           </div>
         </section>
@@ -257,25 +111,13 @@ export default function ShopPage() {
   );
 }
 
-function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-5 pb-5 border-b border-border last:border-0 last:pb-0 last:mb-0">
-      <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-3">{label}</p>
-      {children}
-    </div>
-  );
-}
-
-function ProductCard({ product }: { product: Product }) {
-  const isConfigurable = product.customLevel === 'full';
-  const href = isConfigurable ? '/configurator' : '#';
-  const { currencyCode } = useCurrency();
-  const { addItem, openCart } = useCart();
-  const fmt = (omr: number) => formatPrice(omr, currencyCode);
+function ProductCard({ product, fmt }: { product: Product; fmt: (n: number) => string }) {
+  const isConfigurable = product.customLevel === 'full' && product.status === 'available';
+  const { addItem } = useCart();
 
   return (
     <div className="product-card h-full rounded-lg border border-border bg-card overflow-hidden flex flex-col">
-      <div className="relative h-56 bg-gradient-to-br from-muted/30 to-muted/5 dark:from-white/5 dark:to-transparent">
+      <div className="relative h-64 bg-gradient-to-br from-muted/30 to-muted/5 dark:from-white/5 dark:to-transparent">
         {product.model ? (
           <ProductModelViewer
             src={product.model}
@@ -304,14 +146,14 @@ function ProductCard({ product }: { product: Product }) {
         )}
       </div>
 
-      <div className="p-5 flex flex-col flex-1">
+      <div className="p-6 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="text-heading-sm font-heading font-semibold text-foreground">{product.name}</h3>
+          <h3 className="text-heading-md font-heading font-semibold text-foreground">{product.name}</h3>
           <span className="price-tag text-lg text-[#F9733E] flex-shrink-0">{fmt(product.price)}</span>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">{product.desc}</p>
+        <p className="text-xs text-muted-foreground mb-4 leading-relaxed">{product.desc}</p>
 
-        <ul className="space-y-1 mb-4 flex-1">
+        <ul className="space-y-1.5 mb-6 flex-1">
           {product.features.map(f => (
             <li key={f} className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Check className="w-3 h-3 text-[#F9733E] flex-shrink-0" /> {f}
@@ -319,25 +161,23 @@ function ProductCard({ product }: { product: Product }) {
           ))}
         </ul>
 
-        <div className="flex items-center gap-2">
-          {isConfigurable ? (
-            <Link href={href} className="btn-primary flex-1 justify-center text-xs py-2.5">
-              Customize <ArrowRight className="w-3 h-3" />
-            </Link>
-          ) : (
-            <button
-              disabled={product.status === 'coming-soon'}
-              onClick={() => {
-                if (product.status === 'available') {
-                  addItem({ id: product.id, name: product.name, price: product.price });
-                }
-              }}
-              className="btn-primary flex-1 justify-center text-xs py-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {product.status === 'coming-soon' ? 'Notify me' : 'Add to cart'}
-            </button>
-          )}
-        </div>
+        {isConfigurable ? (
+          <Link href="/configurator" className="btn-primary w-full justify-center text-sm py-3">
+            Customize <ArrowRight className="w-4 h-4" />
+          </Link>
+        ) : (
+          <button
+            disabled={product.status === 'coming-soon'}
+            onClick={() => {
+              if (product.status === 'available') {
+                addItem({ id: product.id, name: product.name, price: product.price });
+              }
+            }}
+            className="btn-primary w-full justify-center text-sm py-3 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {product.status === 'coming-soon' ? 'Notify me' : 'Add to cart'}
+          </button>
+        )}
       </div>
     </div>
   );

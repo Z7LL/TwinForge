@@ -44,7 +44,7 @@ export default function ConfiguratorPage() {
   const shipDate = useMemo(() => estimateShipDate(leadDays), [leadDays]);
 
   const update = useCallback((key: keyof ConfigState, value: string) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
+    setConfig(prev => ({ ...prev, [key]: key === 'extraScrewKit' ? value === 'true' : value }));
     setAddedToCart(false);
   }, []);
 
@@ -253,6 +253,29 @@ export default function ConfiguratorPage() {
                   ))}
                 </div>
               </Section>
+
+              {/* Extra Screw & Pin Kit add-on */}
+              <div className="rounded-xl border-2 border-border bg-card p-5 transition-all duration-200 hover:border-foreground/20">
+                <button
+                  onClick={() => update('extraScrewKit', config.extraScrewKit ? 'false' : 'true')}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      config.extraScrewKit ? 'border-[#F9733E] bg-[#F9733E]' : 'border-border'
+                    }`}>
+                      {config.extraScrewKit && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Extra Screw &amp; Pin Kit</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                        A spare set of screws, pins, and washers for quick swaps or replacements.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-[#F9733E] flex-shrink-0 ml-3">+{fmt(5)}</span>
+                </button>
+              </div>
 
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="p-6 border-b border-border bg-muted/30">

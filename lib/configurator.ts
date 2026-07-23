@@ -24,6 +24,7 @@ export interface ConfigState {
   screwsColor: string;
   biteHandleColor: string;
   weight: string;
+  extraScrewKit: boolean;
 }
 
 export interface Currency {
@@ -140,6 +141,7 @@ export const DEFAULT_CONFIG: ConfigState = {
   screwsColor: 'matt-black',
   biteHandleColor: 'matt-black',
   weight: 'standard',
+  extraScrewKit: false,
 };
 
 export const BUTTERFLY_GLB_PATH = '/assets/models/Butterfly_Knife.glb';
@@ -178,6 +180,8 @@ export function calculatePrice(config: ConfigState): { total: number; breakdown:
 
   const weight = findOption(WEIGHTS, config.weight);
   if (weight && weight.price > 0) breakdown.push({ label: `${weight.name} weight kit`, price: weight.price });
+
+  if (config.extraScrewKit) breakdown.push({ label: 'Extra Screw & Pin Kit', price: 5 });
 
   const total = breakdown.reduce((sum, b) => sum + b.price, 0);
   return { total, breakdown };

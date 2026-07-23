@@ -22,7 +22,7 @@ export function Footer() {
               </div>
               <p className="text-white/60 text-sm leading-relaxed max-w-sm mb-6">
                 Two brothers. A printer. A desire to make custom objects that feel personal.
-                We design 3D-printed PLA trainers for flippers, gamers, and makers of all ages.
+                We design and 3D-print custom PLA products for gamers, flippers, and makers of all ages.
                 Made in Oman. Shipped worldwide.
               </p>
               <div className="flex items-center gap-4">
@@ -42,7 +42,7 @@ export function Footer() {
             <div>
               <h3 className="font-heading font-semibold text-sm tracking-widest text-white/40 uppercase mb-4">Products</h3>
               <ul className="space-y-3">
-                {['Butterfly Trainer', 'Arrow Handle', 'Honeycomb Handle', 'Viper Mini Shell', 'Fidget Collection', 'Accessories'].map(item => (
+                {['Butterfly Trainer', 'Viper Mini Shell Mod', 'Screw & Pin Kit', 'More coming soon'].map(item => (
                   <li key={item}>
                     <Link href="/shop" className="text-sm text-white/60 hover:text-[#F9733E] transition-colors duration-200">{item}</Link>
                   </li>
@@ -56,7 +56,6 @@ export function Footer() {
               <ul className="space-y-3">
                 {[
                   { label: 'About Us', href: '/about' },
-                  { label: 'Configurator', href: '/configurator' },
                   { label: 'Shop', href: '/shop' },
                   { label: 'Contact', href: '/contact' },
                   { label: 'Custom Orders', href: '/contact#custom' },

@@ -99,7 +99,7 @@ export default function Home() {
 
                 <ScrollReveal delay={200}>
                   <p className="text-lg text-muted-foreground leading-relaxed">
-                    Design it. Tune it. Hold it. Premium customizable 3D-printed PLA trainers —
+                    Design it. Tune it. Hold it. Premium customizable 3D-printed PLA products —
                     engineered for flippers, gamers, and makers of all ages. Safe plastic construction,
                     built to order, and made your way.
                   </p>
@@ -107,12 +107,12 @@ export default function Home() {
 
                 <ScrollReveal delay={300}>
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Link href="/configurator" className="btn-primary text-base px-7 py-4">
-                      Customize Your Trainer
+                    <Link href="/shop" className="btn-primary text-base px-7 py-4">
+                      Browse the Shop
                       <ArrowRight className="w-4 h-4" />
                     </Link>
-                    <Link href="/shop" className="btn-secondary text-base px-7 py-4">
-                      See Specs
+                    <Link href="/about" className="btn-secondary text-base px-7 py-4">
+                      Our Story
                     </Link>
                   </div>
                 </ScrollReveal>
@@ -324,42 +324,47 @@ export default function Home() {
               </Link>
             </ScrollReveal>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 {
                   name: 'Butterfly Trainer',
                   tag: 'Bestseller',
                   price: fmt(34),
                   model: '/assets/models/1_Honeycomb_Pattern_Handles_+_Improved.glb',
-                  features: ['Honeycomb grip', 'Tunable balance', 'Safe PLA plastic'],
+                  features: ['Fully customizable', 'Honeycomb grip', 'Safe PLA plastic'],
+                  href: '/configurator',
+                  cta: 'Customize',
                 },
                 {
-                  name: 'Arrow Handle Trainer',
-                  tag: 'New',
-                  price: fmt(37),
-                  model: '/assets/models/1_Arrow_Pattern_Handles_+_Improved.glb',
-                  features: ['Serrated grip', 'Arrow pattern', 'Lightweight'],
-                },
-                {
-                  name: 'Arrow Pro Trainer',
-                  tag: 'Premium',
-                  price: fmt(46),
-                  model: '/assets/models/2_Arrow_Pattern_Handles_+_Improved.glb',
-                  features: ['Reinforced', 'Heavier flip', 'Pro balance'],
+                  name: 'Viper Mini Shell Mod',
+                  tag: 'Coming soon',
+                  price: fmt(17),
+                  model: null,
+                  features: ['Viper Mini compatible', 'Custom colors', 'Snap-fit'],
+                  href: '/shop',
+                  cta: 'Learn more',
                 },
               ].map((product, i) => (
                 <ScrollReveal key={product.name} delay={i * 120}>
-                  <Link href="/configurator" className="group block h-full">
+                  <Link href={product.href} className="group block h-full">
                     <div className="product-card h-full rounded-lg border border-border bg-card overflow-hidden">
                       <div className="relative h-64 bg-gradient-to-br from-muted/40 to-muted/10 dark:from-white/5 dark:to-transparent">
-                        <ProductModelViewer
-                          src={product.model}
-                          alt={`${product.name} 3D render`}
-                          autoRotate
-                          autoRotateDelay={1500}
-                          cameraControls={false}
-                          className="w-full h-full"
-                        />
+                        {product.model ? (
+                          <ProductModelViewer
+                            src={product.model}
+                            alt={`${product.name} 3D render`}
+                            autoRotate
+                            autoRotateDelay={1500}
+                            cameraControls={false}
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <div className="w-16 h-16 rounded-lg bg-[#F9733E]/10 flex items-center justify-center">
+                              <span className="text-2xl font-display font-bold text-[#F9733E]">TF</span>
+                            </div>
+                          </div>
+                        )}
                         <div className="absolute top-3 left-3 px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase bg-[#F9733E] text-white">
                           {product.tag}
                         </div>
@@ -378,7 +383,7 @@ export default function Home() {
                           ))}
                         </ul>
                         <div className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-[#F9733E] transition-colors">
-                          Customize
+                          {product.cta}
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
@@ -403,11 +408,11 @@ export default function Home() {
                     Design it. Tune it. Hold it.
                   </h2>
                   <p className="text-lg text-white/70 mb-8 max-w-lg">
-                    Build a trainer that matches your hands, your playstyle, and your taste.
+                    Build a product that matches your hands, your playstyle, and your taste.
                     Every option updates the price and lead time in real time.
                   </p>
-                  <Link href="/configurator" className="btn-primary text-base px-8 py-4">
-                    Start Customizing
+                  <Link href="/shop" className="btn-primary text-base px-8 py-4">
+                    Browse the Shop
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>

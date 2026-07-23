@@ -230,11 +230,11 @@ export default function AboutPage() {
                     Build something that&apos;s yours.
                   </h2>
                   <p className="text-lg text-white/90 mb-8">
-                    Every trainer is made to order. Open the configurator and spec one
+                    Every product is made to order. Browse the shop and spec one
                     to your exact taste — color, weight, finish.
                   </p>
-                  <Link href="/configurator" className="inline-flex items-center gap-2 px-7 py-4 bg-white text-[#F9733E] font-semibold rounded-md hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
-                    Start Customizing <ArrowRight className="w-4 h-4" />
+                  <Link href="/shop" className="inline-flex items-center gap-2 px-7 py-4 bg-white text-[#F9733E] font-semibold rounded-md hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
+                    Browse the Shop <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
