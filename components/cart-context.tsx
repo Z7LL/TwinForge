@@ -9,6 +9,7 @@ export interface CartItem {
   qty: number;
   config?: Record<string, string>;
   image?: string;
+  url?: string;
 }
 
 interface CartContextValue {

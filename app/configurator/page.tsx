@@ -76,6 +76,7 @@ export default function ConfiguratorPage() {
       id: `trainer-${Date.now()}`,
       name: 'Custom Butterfly Trainer',
       price: total,
+      url: buildShareUrl(config),
       config: {
         handleStyle: handleStyleName,
         bladeShape: bladeShapeName,
@@ -165,7 +166,7 @@ export default function ConfiguratorPage() {
                       active={config.bladeShape === opt.id}
                       onClick={() => update('bladeShape', opt.id)}
                       title={opt.displayName || opt.name}
-                      desc={`${opt.name}${opt.desc ? ` · ${opt.desc}` : ''}`}
+                      desc={opt.desc}
                       priceDelta={opt.price}
                       priceFormatter={fmt}
                     />

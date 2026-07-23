@@ -82,7 +82,7 @@ export const BLADE_SHAPES: OptionChoice[] = [
   {
     id: 'Sharp_Bladeglb',
     name: 'Sharp_Bladeglb',
-    displayName: 'Tanto',
+    displayName: 'Sharp blade',
     price: 5,
     leadDays: 1,
     desc: 'Angular tip with a strong tactical profile.',
@@ -90,7 +90,7 @@ export const BLADE_SHAPES: OptionChoice[] = [
   {
     id: 'Knife_Bladeglb',
     name: 'Knife_Bladeglb',
-    displayName: 'Clip point',
+    displayName: 'Knife blade',
     price: 5,
     leadDays: 1,
     desc: 'Classic clipped spine with a sharper, more agile tip.',
@@ -98,7 +98,7 @@ export const BLADE_SHAPES: OptionChoice[] = [
   {
     id: 'Moon_Bladeglb',
     name: 'Moon_Bladeglb',
-    displayName: 'Drop point',
+    displayName: 'Moon blade',
     price: 3,
     leadDays: 0,
     desc: 'Smooth all-round profile with a stronger everyday-use tip.',
