@@ -58,7 +58,7 @@ export function CartDrawer() {
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-5 border-b border-border">
           <div className="flex items-center gap-2.5">
             <ShoppingBag className="w-5 h-5 text-[#F9733E]" />
             <h2 className="text-base font-semibold text-foreground">
@@ -71,7 +71,7 @@ export function CartDrawer() {
         </div>
 
         {/* Items */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
@@ -136,7 +136,7 @@ export function CartDrawer() {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t border-border px-6 py-5 space-y-4">
+          <div className="border-t border-border px-4 sm:px-6 py-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Subtotal</span>
               <span className="text-xl font-semibold text-foreground">{fmt(totalPrice)}</span>

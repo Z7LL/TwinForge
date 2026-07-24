@@ -6,7 +6,7 @@ import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import {
   Mail, MessageSquare, Building2, Send, Check, MapPin, Clock,
-  Hammer, Sparkles,
+  Hammer, Sparkles, Phone,
 } from 'lucide-react';
 
 const INQUIRY_TYPES = [
@@ -188,7 +188,7 @@ export default function ContactPage() {
                         {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
                       </div>
 
-                      <button type="submit" className="btn-primary w-full sm:w-auto justify-center">
+                      <button type="submit" className="btn-primary w-full sm:w-auto justify-center py-3.5 text-base">
                         Send message <Send className="w-4 h-4" />
                       </button>
                     </form>
@@ -202,13 +202,22 @@ export default function ContactPage() {
                   <div className="rounded-xl border border-border bg-card p-6">
                     <h3 className="text-heading-sm font-heading font-bold text-foreground mb-4">Direct contact</h3>
                     <div className="space-y-3">
-                      <a href="mailto:hello@twinforge.co" className="flex items-center gap-3 group">
+                      <a href="mailto:twinforge.om@gmail.com" className="flex items-center gap-3 group">
                         <div className="p-2 rounded-md bg-[#F9733E]/10 group-hover:bg-[#F9733E] transition-colors">
                           <Mail className="w-4 h-4 text-[#F9733E] group-hover:text-white transition-colors" />
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Email</p>
-                          <p className="text-sm font-semibold text-foreground">hello@twinforge.co</p>
+                          <p className="text-sm font-semibold text-foreground">twinforge.om@gmail.com</p>
+                        </div>
+                      </a>
+                      <a href="tel:+96891232926" className="flex items-center gap-3 group">
+                        <div className="p-2 rounded-md bg-[#F9733E]/10 group-hover:bg-[#F9733E] transition-colors">
+                          <Phone className="w-4 h-4 text-[#F9733E] group-hover:text-white transition-colors" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Phone / WhatsApp</p>
+                          <p className="text-sm font-semibold text-foreground">+968 91232926</p>
                         </div>
                       </a>
                       <div className="flex items-center gap-3">

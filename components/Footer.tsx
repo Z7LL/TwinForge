@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Instagram, Twitter, Youtube } from 'lucide-react';
+import { Instagram, Mail, Phone } from 'lucide-react';
 import { CurrencySelector } from '@/components/CurrencySelector';
 
 export function Footer() {
@@ -26,14 +26,14 @@ export function Footer() {
                 Made in Oman. Shipped worldwide.
               </p>
               <div className="flex items-center gap-4">
-                <a href="#" aria-label="Instagram" className="p-2 rounded-md text-white/40 hover:text-[#F9733E] hover:bg-white/5 transition-all duration-200">
+                <a href="https://instagram.com/twinforge.om" target="_blank" rel="noopener noreferrer" aria-label="Instagram @twinforge.om" className="p-2 rounded-md text-white/40 hover:text-[#F9733E] hover:bg-white/5 transition-all duration-200">
                   <Instagram className="w-4 h-4" />
                 </a>
-                <a href="#" aria-label="Twitter" className="p-2 rounded-md text-white/40 hover:text-[#F9733E] hover:bg-white/5 transition-all duration-200">
-                  <Twitter className="w-4 h-4" />
+                <a href="mailto:twinforge.om@gmail.com" aria-label="Email Twin Forge" className="p-2 rounded-md text-white/40 hover:text-[#F9733E] hover:bg-white/5 transition-all duration-200">
+                  <Mail className="w-4 h-4" />
                 </a>
-                <a href="#" aria-label="YouTube" className="p-2 rounded-md text-white/40 hover:text-[#F9733E] hover:bg-white/5 transition-all duration-200">
-                  <Youtube className="w-4 h-4" />
+                <a href="tel:+96891232926" aria-label="Call Twin Forge" className="p-2 rounded-md text-white/40 hover:text-[#F9733E] hover:bg-white/5 transition-all duration-200">
+                  <Phone className="w-4 h-4" />
                 </a>
               </div>
             </div>

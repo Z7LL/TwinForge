@@ -127,7 +127,7 @@ export default function ConfiguratorPage() {
         <div className="container-max px-6 md:px-12 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
             <div className="lg:sticky lg:top-[140px] self-start">
-              <div className="relative rounded-2xl overflow-hidden h-[640px] shadow-[0_24px_64px_rgba(0,0,0,0.14)] ring-1 ring-black/[0.08]">
+              <div className="relative rounded-2xl overflow-hidden h-[380px] sm:h-[480px] lg:h-[640px] shadow-[0_24px_64px_rgba(0,0,0,0.14)] ring-1 ring-black/[0.08]">
                 <ButterflyViewer
                   ref={viewerRef}
                   glbSrc={BUTTERFLY_GLB_PATH}
@@ -151,7 +151,7 @@ export default function ConfiguratorPage() {
 
                 <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-full bg-white/82 backdrop-blur border border-[#efd2ad] z-10">
                   <Sparkles className="w-3.5 h-3.5 text-[#F9733E]" />
-                  <span className="text-xs font-semibold text-[#6d4b2f]">Sunlit live preview</span>
+                  <span className="text-xs font-semibold text-[#6d4b2f]">Live preview</span>
                 </div>
               </div>
             </div>

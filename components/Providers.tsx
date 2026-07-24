@@ -3,14 +3,17 @@
 import { ThemeProvider } from 'next-themes';
 import { CartProvider } from '@/components/cart-context';
 import { CartDrawer } from '@/components/CartDrawer';
+import { CurrencyProvider } from '@/hooks/use-currency';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <CartProvider>
-        {children}
-        <CartDrawer />
-      </CartProvider>
+      <CurrencyProvider>
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
+      </CurrencyProvider>
     </ThemeProvider>
   );
 }
