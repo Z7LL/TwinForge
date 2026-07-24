@@ -20,6 +20,9 @@ import {
   getColorHex,
   formatPrice,
   parseConfigFromUrl,
+  handleUnitPrice,
+  bladeUnitPrice,
+  screwsUnitPrice,
   type ConfigState,
 } from '@/lib/configurator';
 import { useCurrency } from '@/hooks/use-currency';
@@ -167,7 +170,7 @@ export default function ConfiguratorPage() {
                       onClick={() => update('bladeShape', opt.id)}
                       title={opt.displayName || opt.name}
                       desc={opt.desc}
-                      priceDelta={opt.price}
+                      priceDelta={bladeUnitPrice(opt.id, config.bladeFinish)}
                       priceFormatter={fmt}
                     />
                   ))}
@@ -187,13 +190,13 @@ export default function ConfiguratorPage() {
                     >
                       <div className="w-full h-8 rounded mb-2" style={{ backgroundColor: opt.hex || '#54565A' }} />
                       <p className="text-sm font-semibold text-foreground">{opt.name}</p>
-                      {opt.price > 0 && <p className="text-xs text-[#F9733E] font-semibold mt-0.5">+{fmt(opt.price)}</p>}
+                      <p className="text-xs text-[#F9733E] font-semibold mt-0.5">{fmt(bladeUnitPrice(config.bladeShape, opt.id))}</p>
                     </button>
                   ))}
                 </div>
               </Section>
 
-              <Section title="Handles" desc="Pick your handle texture, then customize left and right colors separately.">
+              <Section title="Handles" desc="Pick your handle texture, then customize left and right colors separately. Same color for both handles costs more per handle; different colors cost less.">
                 <Label>Handle pattern</Label>
                 <div className="grid grid-cols-1 gap-3 mb-6">
                   {HANDLE_STYLES.map(opt => (
@@ -202,23 +205,31 @@ export default function ConfiguratorPage() {
                       active={config.handleStyle === opt.id}
                       onClick={() => update('handleStyle', opt.id)}
                       title={opt.name}
-                      priceDelta={opt.price}
-                      priceFormatter={fmt}
                       desc={opt.desc}
                     />
                   ))}
                 </div>
 
                 <Label>Left handle color</Label>
-                <ColorPicker selectedId={config.handleColor} onSelect={id => update('handleColor', id)} />
+                <ColorPicker
+                  selectedId={config.handleColor}
+                  onSelect={id => update('handleColor', id)}
+                  priceForColor={(id) => handleUnitPrice(config.handleStyle, id, id === config.biteHandleColor)}
+                  priceFormatter={fmt}
+                />
 
                 <div className="mt-6">
                   <Label>Right handle color</Label>
-                  <ColorPicker selectedId={config.biteHandleColor} onSelect={id => update('biteHandleColor', id)} />
+                  <ColorPicker
+                    selectedId={config.biteHandleColor}
+                    onSelect={id => update('biteHandleColor', id)}
+                    priceForColor={(id) => handleUnitPrice(config.handleStyle, id, id === config.handleColor)}
+                    priceFormatter={fmt}
+                  />
                 </div>
               </Section>
 
-              <Section title="Hardware" desc="Fine-tune the screws, pivots, washers, and bite handle accent.">
+              <Section title="Hardware" desc="Screws, pins, and washers — included with every knife (2 screws + 4 washers).">
                 <Label>Hardware color</Label>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {SCREWS_COLORS.map(opt => (
@@ -231,7 +242,7 @@ export default function ConfiguratorPage() {
                     >
                       <div className="w-4 h-4 rounded-full" style={{ backgroundColor: opt.hex }} />
                       <span className="text-sm font-semibold text-foreground">{opt.name}</span>
-                      {opt.price > 0 && <span className="text-xs text-[#F9733E] font-semibold">+{fmt(opt.price)}</span>}
+                      <span className="text-xs text-[#F9733E] font-semibold">{fmt(screwsUnitPrice(opt.id))}</span>
                     </button>
                   ))}
                 </div>
@@ -370,21 +381,35 @@ function OptionCard({
 function ColorPicker({
   selectedId,
   onSelect,
+  priceForColor,
+  priceFormatter,
 }: {
   selectedId: string;
   onSelect: (id: string) => void;
+  priceForColor?: (id: string) => number;
+  priceFormatter?: (n: number) => string;
 }) {
+  const fmt = priceFormatter || ((n: number) => `${n}`);
   return (
     <div className="flex flex-wrap items-center gap-3">
       {COLOR_SWATCHES.map(c => (
         <button
           key={c.id}
           onClick={() => onSelect(c.id)}
-          className={`color-swatch ${selectedId === c.id ? 'active' : ''}`}
-          style={{ backgroundColor: c.hex }}
+          className={`flex flex-col items-center gap-1 group`}
           aria-label={c.name}
           title={c.name}
-        />
+        >
+          <div
+            className={`color-swatch ${selectedId === c.id ? 'active' : ''}`}
+            style={{ backgroundColor: c.hex }}
+          />
+          {priceForColor && (
+            <span className={`text-[10px] font-semibold ${selectedId === c.id ? 'text-[#F9733E]' : 'text-muted-foreground'}`}>
+              {fmt(priceForColor(c.id))}
+            </span>
+          )}
+        </button>
       ))}
     </div>
   );
