@@ -160,6 +160,36 @@ export function getColorHex(id: string): string {
   return color?.hex || '#111111';
 }
 
+export const BW_COLORS = new Set(['matt-black', 'hyper-white']);
+
+export function isBW(colorId: string): boolean {
+  return BW_COLORS.has(colorId);
+}
+
+export function handleUnitPrice(style: string, colorId: string, sameColor: boolean): number {
+  if (sameColor) {
+    return isBW(colorId) ? 1.4 : 1.1;
+  }
+  if (style === 'arrow') {
+    return isBW(colorId) ? 0.9 : 0.7;
+  }
+  return isBW(colorId) ? 1.1 : 0.7;
+}
+
+export function bladeUnitPrice(shape: string, colorId: string): number {
+  const bw = isBW(colorId);
+  switch (shape) {
+    case 'Knife_Bladeglb': return bw ? 0.7 : 0.6;
+    case 'Sharp_Bladeglb': return bw ? 0.8 : 0.6;
+    case 'Moon_Bladeglb':  return bw ? 0.7 : 0.6;
+    default:               return bw ? 0.7 : 0.6;
+  }
+}
+
+export function screwsUnitPrice(colorId: string): number {
+  return isBW(colorId) ? 0.6 : 0.5;
+}
+
 export function calculatePrice(config: ConfigState): { total: number; breakdown: { label: string; price: number }[] } {
   const breakdown: { label: string; price: number }[] = [];
 
@@ -167,16 +197,21 @@ export function calculatePrice(config: ConfigState): { total: number; breakdown:
   if (model) breakdown.push({ label: `${model.name} base`, price: model.price });
 
   const handle = findOption(HANDLE_STYLES, config.handleStyle);
-  if (handle && handle.price > 0) breakdown.push({ label: `${handle.name} handle`, price: handle.price });
+  const handleName = handle?.name || config.handleStyle;
+  const sameColor = config.handleColor === config.biteHandleColor;
+
+  const leftPrice = handleUnitPrice(config.handleStyle, config.handleColor, sameColor);
+  const rightPrice = handleUnitPrice(config.handleStyle, config.biteHandleColor, sameColor);
+  breakdown.push({ label: `${handleName} handle (left)`, price: leftPrice });
+  breakdown.push({ label: `${handleName} handle (right)`, price: rightPrice });
 
   const blade = findOption(BLADE_SHAPES, config.bladeShape);
-  if (blade && blade.price > 0) breakdown.push({ label: `${blade.displayName || blade.name} blade`, price: blade.price });
+  const bladeName = blade?.displayName || blade?.name || config.bladeShape;
+  const bladePrice = bladeUnitPrice(config.bladeShape, config.bladeFinish);
+  breakdown.push({ label: `${bladeName}`, price: bladePrice });
 
-  const bladeFinish = findOption(BLADE_FINISHES, config.bladeFinish);
-  if (bladeFinish && bladeFinish.price > 0) breakdown.push({ label: `${bladeFinish.name} finish`, price: bladeFinish.price });
-
-  const screwsColor = findOption(SCREWS_COLORS, config.screwsColor);
-  if (screwsColor && screwsColor.price > 0) breakdown.push({ label: `${screwsColor.name} screws`, price: screwsColor.price });
+  const screwsPrice = screwsUnitPrice(config.screwsColor);
+  breakdown.push({ label: 'Screws & pins (2 screws, 4 washers)', price: screwsPrice });
 
   const weight = findOption(WEIGHTS, config.weight);
   if (weight && weight.price > 0) breakdown.push({ label: `${weight.name} weight kit`, price: weight.price });
