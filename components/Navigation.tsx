@@ -56,22 +56,15 @@ export function Navigation() {
           <nav className="flex items-center justify-between h-16 md:h-18">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group" aria-label="Twin Forge Co.">
-              <div className={`flex items-center gap-1.5 transition-opacity duration-200 ${forceWhite ? 'opacity-90 hover:opacity-100' : ''}`}>
+              <div className={`flex items-center transition-opacity duration-200 ${forceWhite ? 'opacity-90 hover:opacity-100' : ''}`}>
                 <Image
-                  src="/assets/images/hammer_copy.png"
+                  src="/assets/images/Twin_forge_logo.png"
                   alt="Twin Forge Co."
-                  width={24}
-                  height={24}
-                  className="group-hover:scale-110 transition-transform duration-200"
+                  width={140}
+                  height={48}
+                  className="h-10 w-auto object-contain"
+                  priority
                 />
-                <span
-                  className={`font-display text-xl font-bold tracking-wider transition-colors duration-300 ${
-                    forceWhite ? 'text-white' : 'text-foreground'
-                  }`}
-                >
-                  TWIN <span className="text-[#F9733E]">FORGE</span>{' '}
-                  <span className={`text-xs font-medium align-middle ${forceWhite ? 'text-white/60' : 'text-muted-foreground'}`}>CO.</span>
-                </span>
               </div>
             </Link>
 
