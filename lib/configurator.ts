@@ -193,17 +193,19 @@ export function screwsUnitPrice(colorId: string): number {
 export function calculatePrice(config: ConfigState): { total: number; breakdown: { label: string; price: number }[] } {
   const breakdown: { label: string; price: number }[] = [];
 
-  const model = findOption(MODELS, config.model);
-  if (model) breakdown.push({ label: `${model.name} base`, price: model.price });
-
   const handle = findOption(HANDLE_STYLES, config.handleStyle);
   const handleName = handle?.name || config.handleStyle;
   const sameColor = config.handleColor === config.biteHandleColor;
 
-  const leftPrice = handleUnitPrice(config.handleStyle, config.handleColor, sameColor);
-  const rightPrice = handleUnitPrice(config.handleStyle, config.biteHandleColor, sameColor);
-  breakdown.push({ label: `${handleName} handle (left)`, price: leftPrice });
-  breakdown.push({ label: `${handleName} handle (right)`, price: rightPrice });
+  if (sameColor) {
+    const combinedPrice = handleUnitPrice(config.handleStyle, config.handleColor, true);
+    breakdown.push({ label: `${handleName} handles (matching color)`, price: combinedPrice });
+  } else {
+    const leftPrice = handleUnitPrice(config.handleStyle, config.handleColor, false);
+    const rightPrice = handleUnitPrice(config.handleStyle, config.biteHandleColor, false);
+    breakdown.push({ label: `${handleName} handle (left)`, price: leftPrice });
+    breakdown.push({ label: `${handleName} handle (right)`, price: rightPrice });
+  }
 
   const blade = findOption(BLADE_SHAPES, config.bladeShape);
   const bladeName = blade?.displayName || blade?.name || config.bladeShape;
@@ -216,34 +218,24 @@ export function calculatePrice(config: ConfigState): { total: number; breakdown:
   const weight = findOption(WEIGHTS, config.weight);
   if (weight && weight.price > 0) breakdown.push({ label: `${weight.name} weight kit`, price: weight.price });
 
-  if (config.extraScrewKit) breakdown.push({ label: 'Extra Screw & Pin Kit', price: 5 });
+  if (config.extraScrewKit) breakdown.push({ label: 'Extra Screw & Pin Kit', price: screwsUnitPrice(config.screwsColor) });
 
   const total = breakdown.reduce((sum, b) => sum + b.price, 0);
   return { total, breakdown };
 }
 
 export function calculateLeadDays(config: ConfigState): number {
-  let days = 5;
-  const model = findOption(MODELS, config.model);
-  if (model) days = Math.max(days, model.leadDays);
-
-  [HANDLE_STYLES, BLADE_SHAPES, BLADE_FINISHES, SCREWS_COLORS, WEIGHTS].forEach(list => {
-    const key = list === HANDLE_STYLES ? config.handleStyle
-      : list === BLADE_SHAPES ? config.bladeShape
-      : list === BLADE_FINISHES ? config.bladeFinish
-      : list === SCREWS_COLORS ? config.screwsColor
-      : config.weight;
-    const opt = findOption(list, key);
-    if (opt) days += opt.leadDays;
-  });
-
-  return days;
+  return 5;
 }
 
 export function estimateShipDate(days: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 1);
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + days);
+  const minStr = minDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const maxStr = maxDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${minStr} – ${maxStr}`;
 }
 
 export function buildShareUrl(config: ConfigState): string {
