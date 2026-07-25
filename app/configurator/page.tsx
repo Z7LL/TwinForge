@@ -284,7 +284,7 @@ export default function ConfiguratorPage() {
                       </p>
                     </div>
                   </div>
-                  <span className="text-sm font-semibold text-[#F9733E] flex-shrink-0 ml-3">+{fmt(5)}</span>
+                  <span className="text-sm font-semibold text-[#F9733E] flex-shrink-0 ml-3">+{fmt(screwsUnitPrice(config.screwsColor))}</span>
                 </button>
               </div>
 
@@ -294,7 +294,7 @@ export default function ConfiguratorPage() {
                     <span className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Your build</span>
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock className="w-3 h-3" />
-                      {leadDays} day lead
+                      1–5 day delivery
                     </div>
                   </div>
                   <div className="flex items-baseline gap-2">
