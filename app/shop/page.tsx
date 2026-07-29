@@ -6,7 +6,7 @@ import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { ProductModelViewer } from '@/components/ProductModelViewer';
 import { ScrollReveal } from '@/components/ScrollReveal';
-import { Check, ArrowRight, ShoppingBag, Wrench } from 'lucide-react';
+import { Check, ArrowRight, ShoppingBag, Wrench, Zap, Boxes } from 'lucide-react';
 import { useCurrency } from '@/hooks/use-currency';
 import { useCart } from '@/components/cart-context';
 import { formatPrice } from '@/lib/configurator';
@@ -53,45 +53,84 @@ const PRODUCTS: Product[] = [
   },
 ];
 
+const FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'trainer', label: 'Trainers' },
+  { id: 'shell', label: 'Shells & Mods' },
+];
+
 export default function ShopPage() {
   const { currencyCode } = useCurrency();
   const fmt = (omr: number) => formatPrice(omr, currencyCode);
+  const [filter, setFilter] = useState('all');
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return PRODUCTS;
+    return PRODUCTS.filter(p => p.category === filter);
+  }, [filter]);
 
   return (
     <>
       <Navigation />
-      <main className="pt-16 min-h-screen bg-background">
-        {/* Hero */}
-        <section className="section-padding border-b border-border">
-          <div className="container-max">
-            <ScrollReveal className="max-w-2xl">
-              <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">The Shop</p>
-              <h1 className="text-display-md font-heading font-extrabold text-foreground">
-                Custom 3D-printed hardware.
-              </h1>
-              <p className="text-lg text-muted-foreground mt-4">
-                Made-to-order products, built in Oman and shipped worldwide.
-                More custom products coming soon.
-              </p>
-            </ScrollReveal>
+      <main className="pt-16 min-h-screen bg-background pb-16 md:pb-0">
+
+        {/* Hero — full-bleed dark */}
+        <section className="bg-[#0a0a0a] text-white relative overflow-hidden">
+          <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#F9733E]/8 blur-3xl pointer-events-none" />
+          <div className="grid-backdrop absolute inset-0 opacity-30" />
+          <div className="section-padding relative">
+            <div className="container-wide">
+              <ScrollReveal className="max-w-2xl">
+                <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">The Shop</p>
+                <h1 className="text-fluid-hero font-display">
+                  Custom 3D-printed{' '}
+                  <span className="text-gradient">hardware.</span>
+                </h1>
+                <p className="text-fluid-body text-white/60 mt-6 max-w-lg">
+                  Made-to-order products, built in Oman and shipped worldwide.
+                  More custom products coming soon.
+                </p>
+              </ScrollReveal>
+            </div>
+          </div>
+        </section>
+
+        {/* Filter bar */}
+        <section className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-30">
+          <div className="container-wide px-6 md:px-12 py-4">
+            <div className="flex items-center gap-2">
+              {FILTERS.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setFilter(f.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    filter === f.id
+                      ? 'bg-[#F9733E] text-white'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* Product grid */}
         <section className="section-padding">
-          <div className="container-max">
+          <div className="container-wide">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {PRODUCTS.map((product, i) => (
+              {filtered.map((product, i) => (
                 <ScrollReveal key={product.id} delay={i * 100}>
                   <ProductCard product={product} fmt={fmt} />
                 </ScrollReveal>
               ))}
 
               {/* More coming soon card */}
-              <ScrollReveal delay={PRODUCTS.length * 100}>
-                <div className="h-full rounded-lg border border-dashed border-border bg-card/50 flex flex-col items-center justify-center p-10 text-center min-h-[420px]">
-                  <div className="w-14 h-14 rounded-full bg-[#F9733E]/10 flex items-center justify-center mb-4">
-                    <Wrench className="w-6 h-6 text-[#F9733E]" />
+              <ScrollReveal delay={filtered.length * 100}>
+                <div className="h-full rounded-2xl border-2 border-dashed border-border bg-card/50 flex flex-col items-center justify-center p-10 text-center min-h-[420px] hover:border-[#F9733E]/40 transition-colors duration-300">
+                  <div className="w-16 h-16 rounded-2xl bg-[#F9733E]/10 flex items-center justify-center mb-5">
+                    <Boxes className="w-7 h-7 text-[#F9733E]" />
                   </div>
                   <h3 className="text-heading-md font-heading font-semibold text-foreground mb-2">
                     More coming soon
@@ -105,6 +144,25 @@ export default function ShopPage() {
             </div>
           </div>
         </section>
+
+        {/* Bottom CTA strip */}
+        <section className="section-padding bg-[#0a0a0a] text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#F9733E]/10 blur-3xl rounded-full" />
+          <div className="container-wide relative">
+            <ScrollReveal>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                  <h2 className="text-fluid-heading font-display mb-2">Have a custom idea?</h2>
+                  <p className="text-white/60 max-w-md">We take on limited full custom builds each quarter. Tell us what you&apos;re dreaming up.</p>
+                </div>
+                <Link href="/contact#custom" className="btn-primary text-base px-8 py-4 whitespace-nowrap">
+                  <Zap className="w-4 h-4" />
+                  Get a Custom Quote
+                </Link>
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
       </main>
       <Footer />
     </>
@@ -116,7 +174,7 @@ function ProductCard({ product, fmt }: { product: Product; fmt: (n: number) => s
   const { addItem } = useCart();
 
   return (
-    <div className="product-card h-full rounded-lg border border-border bg-card overflow-hidden flex flex-col">
+    <div className="product-card h-full rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
       <div className="relative h-64 bg-gradient-to-br from-muted/30 to-muted/5 dark:from-white/5 dark:to-transparent">
         {product.model ? (
           <ProductModelViewer
@@ -135,12 +193,12 @@ function ProductCard({ product, fmt }: { product: Product; fmt: (n: number) => s
           </div>
         )}
         {product.tag && (
-          <div className="absolute top-3 left-3 px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase bg-[#F9733E] text-white">
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#F9733E] text-white">
             {product.tag}
           </div>
         )}
         {product.status === 'coming-soon' && (
-          <div className="absolute top-3 right-3 px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase bg-foreground/80 text-background">
+          <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase bg-foreground/80 text-background backdrop-blur">
             Coming soon
           </div>
         )}

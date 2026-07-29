@@ -6,19 +6,25 @@ import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import {
   Mail, MessageSquare, Building2, Send, Check, MapPin, Clock,
-  Hammer, Sparkles, Phone,
+  Sparkles, Phone, ArrowRight, Zap,
 } from 'lucide-react';
 
 const INQUIRY_TYPES = [
   { id: 'general', label: 'General question', icon: MessageSquare },
-  { id: 'custom', label: 'Full custom project', icon: Sparkles },
+  { id: 'custom', label: 'Custom project', icon: Sparkles },
   { id: 'b2b', label: 'B2B / wholesale', icon: Building2 },
-  { id: 'support', label: 'Order support', icon: Hammer },
+];
+
+const BUDGET_RANGES = [
+  { id: 'under-50', label: 'Under 50 OMR' },
+  { id: '50-100', label: '50 – 100 OMR' },
+  { id: '100-200', label: '100 – 200 OMR' },
+  { id: '200+', label: '200+ OMR' },
 ];
 
 export default function ContactPage() {
   const [form, setForm] = useState({
-    name: '', email: '', inquiryType: 'general', message: '', budget: '',
+    name: '', email: '', inquiryType: 'general', message: '', budget: '', productIdea: '',
   });
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,7 +42,6 @@ export default function ContactPage() {
   const submit = (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
-    // In a production app this would POST to an edge function / API route.
     setSubmitted(true);
   };
 
@@ -48,16 +53,20 @@ export default function ContactPage() {
   return (
     <>
       <Navigation />
-      <main className="pt-16 min-h-screen bg-background">
-        {/* Hero */}
-        <section className="section-padding border-b border-border">
-          <div className="container-max">
+      <main className="pt-16 min-h-screen bg-background pb-16 md:pb-0">
+
+        {/* Hero — full-bleed dark */}
+        <section className="section-padding bg-[#0a0a0a] text-white relative overflow-hidden">
+          <div className="absolute top-1/4 -right-32 w-96 h-96 rounded-full bg-[#F9733E]/10 blur-3xl" />
+          <div className="grid-backdrop absolute inset-0 opacity-30" />
+          <div className="container-wide relative">
             <ScrollReveal className="max-w-2xl">
-              <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">Contact</p>
-              <h1 className="text-display-md font-heading font-extrabold text-foreground">
-                Let&apos;s build something together.
+              <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-4">Contact</p>
+              <h1 className="text-fluid-hero font-display">
+                Let&apos;s build{' '}
+                <span className="text-gradient">something together.</span>
               </h1>
-              <p className="text-lg text-muted-foreground mt-4">
+              <p className="text-fluid-body text-white/60 mt-6 max-w-lg">
                 Questions, custom projects, or wholesale inquiries — we read every message.
                 The brothers answer personally.
               </p>
@@ -65,46 +74,50 @@ export default function ContactPage() {
           </div>
         </section>
 
-        {/* Form + info */}
+        {/* Form + info — split layout */}
         <section className="section-padding" id="custom">
-          <div className="container-max">
+          <div className="container-wide">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
+
               {/* Form */}
               <ScrollReveal>
-                <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+                <div className="rounded-2xl border border-border bg-card p-6 md:p-10">
                   {submitted ? (
-                    <div className="py-16 text-center animate-fade-in">
-                      <div className="w-14 h-14 rounded-full bg-green-500/10 border-2 border-green-500 flex items-center justify-center mx-auto mb-4">
-                        <Check className="w-7 h-7 text-green-600" />
+                    <div className="py-20 text-center animate-fade-in">
+                      <div className="w-16 h-16 rounded-full bg-green-500/10 border-2 border-green-500 flex items-center justify-center mx-auto mb-5">
+                        <Check className="w-8 h-8 text-green-600" />
                       </div>
-                      <h2 className="text-heading-lg font-heading font-bold text-foreground mb-2">Message sent</h2>
-                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                      <h2 className="text-fluid-heading font-heading font-bold text-foreground mb-3">Message sent</h2>
+                      <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
                         Thanks, {form.name.split(' ')[0]}. We&apos;ll get back to you at{' '}
                         <span className="font-semibold text-foreground">{form.email}</span> within 1–2 business days.
                       </p>
                       <button
-                        onClick={() => { setSubmitted(false); setForm({ name: '', email: '', inquiryType: 'general', message: '', budget: '' }); }}
+                        onClick={() => {
+                          setSubmitted(false);
+                          setForm({ name: '', email: '', inquiryType: 'general', message: '', budget: '', productIdea: '' });
+                        }}
                         className="mt-6 text-sm font-semibold text-[#F9733E] hover:underline"
                       >
                         Send another message
                       </button>
                     </div>
                   ) : (
-                    <form onSubmit={submit} className="space-y-5">
-                      <h2 className="text-heading-lg font-heading font-bold text-foreground mb-2">Send us a message</h2>
+                    <form onSubmit={submit} className="space-y-6">
+                      <h2 className="text-fluid-heading font-heading font-bold text-foreground">Send us a message</h2>
 
-                      {/* Inquiry type */}
+                      {/* Inquiry type — simplified to 3 options */}
                       <div>
                         <label className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-3 block">
                           What&apos;s this about?
                         </label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                           {INQUIRY_TYPES.map(type => (
                             <button
                               key={type.id}
                               type="button"
                               onClick={() => update('inquiryType', type.id)}
-                              className={`flex flex-col items-center gap-2 p-3 rounded-md border-2 transition-all duration-200 ${
+                              className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all duration-200 ${
                                 form.inquiryType === type.id
                                   ? 'border-[#F9733E] bg-[#F9733E]/5'
                                   : 'border-border hover:border-foreground/30'
@@ -151,24 +164,43 @@ export default function ContactPage() {
                         </div>
                       </div>
 
-                      {/* Budget (for custom / B2B) */}
+                      {/* Product idea — new minimal field */}
+                      <div>
+                        <label htmlFor="productIdea" className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-2 block">
+                          Product idea <span className="text-muted-foreground/50 normal-case font-normal">(optional)</span>
+                        </label>
+                        <input
+                          id="productIdea"
+                          type="text"
+                          value={form.productIdea}
+                          onChange={e => update('productIdea', e.target.value)}
+                          className="forge-input"
+                          placeholder="e.g. Butterfly trainer, custom shell, display piece…"
+                        />
+                      </div>
+
+                      {/* Budget — shown for custom / B2B */}
                       {(form.inquiryType === 'custom' || form.inquiryType === 'b2b') && (
                         <div className="animate-fade-in">
-                          <label htmlFor="budget" className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-2 block">
+                          <label htmlFor="budget" className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-3 block">
                             Estimated budget
                           </label>
-                          <select
-                            id="budget"
-                            value={form.budget}
-                            onChange={e => update('budget', e.target.value)}
-                            className="forge-input cursor-pointer"
-                          >
-                            <option value="">Select a range</option>
-                            <option value="under-200">Under $200</option>
-                            <option value="200-500">$200 – $500</option>
-                            <option value="500-1000">$500 – $1,000</option>
-                            <option value="1000+">$1,000+</option>
-                          </select>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {BUDGET_RANGES.map(range => (
+                              <button
+                                key={range.id}
+                                type="button"
+                                onClick={() => update('budget', range.id)}
+                                className={`px-3 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all duration-200 ${
+                                  form.budget === range.id
+                                    ? 'border-[#F9733E] bg-[#F9733E]/5 text-[#F9733E]'
+                                    : 'border-border text-muted-foreground hover:border-foreground/30'
+                                }`}
+                              >
+                                {range.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
 
@@ -199,11 +231,11 @@ export default function ContactPage() {
               {/* Info sidebar */}
               <ScrollReveal delay={150}>
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-border bg-card p-6">
+                  <div className="rounded-2xl border border-border bg-card p-6">
                     <h3 className="text-heading-sm font-heading font-bold text-foreground mb-4">Direct contact</h3>
                     <div className="space-y-3">
                       <a href="mailto:twinforge.om@gmail.com" className="flex items-center gap-3 group">
-                        <div className="p-2 rounded-md bg-[#F9733E]/10 group-hover:bg-[#F9733E] transition-colors">
+                        <div className="p-2.5 rounded-lg bg-[#F9733E]/10 group-hover:bg-[#F9733E] transition-colors">
                           <Mail className="w-4 h-4 text-[#F9733E] group-hover:text-white transition-colors" />
                         </div>
                         <div>
@@ -212,7 +244,7 @@ export default function ContactPage() {
                         </div>
                       </a>
                       <a href="tel:+96891232926" className="flex items-center gap-3 group">
-                        <div className="p-2 rounded-md bg-[#F9733E]/10 group-hover:bg-[#F9733E] transition-colors">
+                        <div className="p-2.5 rounded-lg bg-[#F9733E]/10 group-hover:bg-[#F9733E] transition-colors">
                           <Phone className="w-4 h-4 text-[#F9733E] group-hover:text-white transition-colors" />
                         </div>
                         <div>
@@ -221,7 +253,7 @@ export default function ContactPage() {
                         </div>
                       </a>
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-md bg-[#F9733E]/10">
+                        <div className="p-2.5 rounded-lg bg-[#F9733E]/10">
                           <MapPin className="w-4 h-4 text-[#F9733E]" />
                         </div>
                         <div>
@@ -230,7 +262,7 @@ export default function ContactPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-md bg-[#F9733E]/10">
+                        <div className="p-2.5 rounded-lg bg-[#F9733E]/10">
                           <Clock className="w-4 h-4 text-[#F9733E]" />
                         </div>
                         <div>
@@ -241,26 +273,25 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-[#F9733E]/30 bg-[#F9733E]/5 p-6">
+                  <div className="rounded-2xl border border-[#F9733E]/30 bg-[#F9733E]/5 p-6">
                     <Sparkles className="w-6 h-6 text-[#F9733E] mb-3" />
                     <h3 className="text-heading-sm font-heading font-bold text-foreground mb-2">Full custom project?</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                      Have something completely different in mind? We take on a limited number
-                      of full custom builds each quarter — from one-off display pieces to small
-                      production runs.
+                      We take on a limited number of full custom builds each quarter — from one-off
+                      display pieces to small production runs.
                     </p>
                     <button
                       onClick={() => update('inquiryType', 'custom')}
-                      className="text-sm font-semibold text-[#F9733E] hover:underline"
+                      className="text-sm font-semibold text-[#F9733E] hover:underline inline-flex items-center gap-1"
                     >
-                      Request a quote →
+                      Request a quote <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  <div className="rounded-xl border border-border bg-muted/30 p-6">
+                  <div className="rounded-2xl border border-border bg-muted/30 p-6">
                     <h3 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-3">Shipping & returns</h3>
                     <ul className="space-y-2 text-xs text-muted-foreground">
-                      <li>· Built-to-order: 5–8 day lead time</li>
+                      <li>· Built-to-order: 1–5 day delivery</li>
                       <li>· Ships worldwide from Oman</li>
                       <li>· 14-day returns on unused trainers</li>
                       <li>· Custom builds are final sale</li>
