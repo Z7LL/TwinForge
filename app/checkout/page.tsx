@@ -120,7 +120,7 @@ export default function CheckoutPage() {
         .single();
 
       if (orderError) throw orderError;
-      setOrderId(order.id);
+      setOrderId(String(order.order_number));
 
       const orderItems = items.map(item => ({
         order_id: order.id,
@@ -156,7 +156,7 @@ export default function CheckoutPage() {
             quantity: i.qty,
             config: i.config,
           })),
-          order_id: order.id,
+          order_id: `ORD-${String(order.order_number).padStart(4, '0')}`,
         }),
       });
 
@@ -184,7 +184,7 @@ export default function CheckoutPage() {
               We&apos;ve received your order and sent you a confirmation.
             </p>
             <p className="text-xs text-muted-foreground mb-6">
-              Order ID: <span className="font-mono font-semibold text-foreground">{orderId.slice(0, 8)}</span>
+              Order ID: <span className="font-mono font-semibold text-foreground">ORD-{String(orderId).padStart(4, '0')}</span>
             </p>
             <p className="text-sm text-muted-foreground mb-8">
               We&apos;ll contact you on <span className="font-semibold text-foreground">{form.phone}</span> to confirm delivery details.
