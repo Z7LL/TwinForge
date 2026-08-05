@@ -19,7 +19,22 @@ const GOVERNORATES = [
   'Al Sharqiyah South', 'Al Wusta',
 ];
 
+const CITIES_BY_GOVERNORATE: Record<string, string[]> = {
+  'Muscat': ['Ruwi', 'Mutrah', 'Seeb', 'Bausher', 'Al Amrat', 'Qurayyat', 'Muscat Old City', 'Wadi Kabir', 'Ghala', 'Al Khuwair'],
+  'Dhofar': ['Salalah', 'Taqah', 'Mirbat', 'Sadh', 'Rakhyut', 'Dalkut', 'Mughsail', 'Hinna'],
+  'Musandam': ['Khasab', 'Dibba Al-Baya', 'Bukha', 'Madha', 'Limah'],
+  'Al Batinah North': ['Sohar', 'Shinas', 'Liwa', 'Saham', 'Al Khabourah'],
+  'Al Batinah South': ['Rustaq', 'Nakhal', 'Al Awabi', 'Wadi Al Maawil', 'Barka'],
+  'Al Buraimi': ['Buraimi', 'Mahdha', 'Al Sinayh'],
+  'Al Dakhiliyah': ['Nizwa', 'Bahla', 'Ibri', 'Adam', 'Manah', 'Hamra', 'Bidbid'],
+  'Al Dhahirah': ['Ibri', 'Yanqul', 'Dhank', 'Al Khabourah'],
+  'Al Sharqiyah North': ['Ibra', 'Al Mudhaibi', 'Bidiya', 'Al Qabil', 'Sinaw'],
+  'Al Sharqiyah South': ['Sur', 'Jalan Bani Bu Ali', 'Jalan Bani Bu Hasan', 'Al Kamil Wal Wafi', 'Masirah'],
+  'Al Wusta': ['Haima', 'Duqm', 'Mahut', 'Al Jazir'],
+};
+
 const SHIPPING_AGENT = 'Genacom';
+const COUNTRY_PREFIX = '+968';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -36,6 +51,8 @@ export default function CheckoutPage() {
     shippingMethod: 'home_delivery', paymentMethod: 'cash_on_delivery', notes: '',
   });
 
+  const availableCities = CITIES_BY_GOVERNORATE[form.governorate] || [];
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const shippingCost = form.shippingMethod === 'home_delivery' ? 2 : 1;
@@ -50,7 +67,8 @@ export default function CheckoutPage() {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = 'Required';
     if (!form.phone.trim()) e.phone = 'Required';
-    else if (!/^[0-9+\-\s]{8,15}$/.test(form.phone.trim())) e.phone = 'Invalid phone';
+    else if (!/^[0-9]{6,10}$/.test(form.phone.trim())) e.phone = 'Enter numbers only (without +968)';
+    if (!form.city.trim()) e.city = 'Required';
     if (!form.address.trim()) e.address = 'Required';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -64,7 +82,7 @@ export default function CheckoutPage() {
       const { data: customer } = await supabase
         .from('customers')
         .select('id')
-        .eq('phone', form.phone)
+        .eq('phone', `${COUNTRY_PREFIX} ${form.phone}`)
         .maybeSingle();
 
       let customerId = customer?.id;
@@ -74,7 +92,7 @@ export default function CheckoutPage() {
           .from('customers')
           .insert({
             name: form.name,
-            phone: form.phone,
+            phone: `${COUNTRY_PREFIX} ${form.phone}`,
             email: form.email || null,
             governorate: form.governorate,
             city: form.city || null,
@@ -102,7 +120,7 @@ export default function CheckoutPage() {
         .insert({
           customer_id: customerId,
           customer_name: form.name,
-          customer_phone: form.phone,
+          customer_phone: `${COUNTRY_PREFIX} ${form.phone}`,
           customer_email: form.email || null,
           governorate: form.governorate,
           city: form.city || null,
@@ -139,10 +157,10 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer_name: form.name,
-          customer_phone: form.phone,
+          customer_phone: `${COUNTRY_PREFIX} ${form.phone}`,
           customer_email: form.email,
           governorate: form.governorate,
-          city: form.city,
+          city: form.city || null,
           address: form.address,
           shipping_method: form.shippingMethod,
           shipping_agent: SHIPPING_AGENT,
@@ -187,7 +205,7 @@ export default function CheckoutPage() {
               Order ID: <span className="font-mono font-semibold text-foreground">ORD-{String(orderId).padStart(4, '0')}</span>
             </p>
             <p className="text-sm text-muted-foreground mb-8">
-              We&apos;ll contact you on <span className="font-semibold text-foreground">{form.phone}</span> to confirm delivery details.
+              We&apos;ll contact you on <span className="font-semibold text-foreground">{COUNTRY_PREFIX} {form.phone}</span> to confirm delivery details.
             </p>
             <button onClick={() => router.push('/shop')} className="btn-primary">
               Continue shopping <ArrowRight className="w-4 h-4" />
@@ -238,15 +256,20 @@ export default function CheckoutPage() {
 
                     <div>
                       <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">Phone *</label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-                        <input
-                          type="tel"
-                          value={form.phone}
-                          onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
-                          className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F9733E] focus:border-transparent transition-all duration-200 placeholder:text-muted-foreground"
-                          placeholder="+968 12345678"
-                        />
+                      <div className="flex">
+                        <div className="flex items-center px-3 py-3 bg-muted border border-r-0 border-border rounded-l-lg text-sm text-muted-foreground font-semibold select-none">
+                          {COUNTRY_PREFIX}
+                        </div>
+                        <div className="relative flex-1">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+                          <input
+                            type="tel"
+                            value={form.phone}
+                            onChange={e => setForm(prev => ({ ...prev, phone: e.target.value.replace(/[^0-9]/g, '') }))}
+                            className="w-full pl-10 pr-4 py-3 bg-white border border-border rounded-r-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F9733E] focus:border-transparent transition-all duration-200 placeholder:text-muted-foreground"
+                            placeholder="12345678"
+                          />
+                        </div>
                       </div>
                       {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                     </div>
@@ -279,7 +302,7 @@ export default function CheckoutPage() {
                       <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">Governorate *</label>
                       <select
                         value={form.governorate}
-                        onChange={e => setForm(prev => ({ ...prev, governorate: e.target.value }))}
+                        onChange={e => setForm(prev => ({ ...prev, governorate: e.target.value, city: '' }))}
                         className="w-full px-4 py-3 bg-white border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F9733E] focus:border-transparent transition-all duration-200"
                       >
                         {GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
@@ -287,14 +310,16 @@ export default function CheckoutPage() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">City / Area</label>
-                      <input
-                        type="text"
+                      <label className="text-xs font-semibold text-muted-foreground uppercase mb-2 block">City / Area *</label>
+                      <select
                         value={form.city}
                         onChange={e => setForm(prev => ({ ...prev, city: e.target.value }))}
-                        className="w-full px-4 py-3 bg-white border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F9733E] focus:border-transparent transition-all duration-200 placeholder:text-muted-foreground"
-                        placeholder="e.g. Ruwi, Seeb, Salalah..."
-                      />
+                        className="w-full px-4 py-3 bg-white border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F9733E] focus:border-transparent transition-all duration-200"
+                      >
+                        <option value="">Select a city...</option>
+                        {availableCities.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
                     </div>
 
                     <div>
