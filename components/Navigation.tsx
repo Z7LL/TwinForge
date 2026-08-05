@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sun, Moon, Menu, X, ShoppingBag, Zap } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Menu, X, ShoppingBag, Zap } from 'lucide-react';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { useCart } from '@/components/cart-context';
 
@@ -18,13 +17,9 @@ const navLinks = [
 
 export function Navigation() {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
   const { totalItems, openCart } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -39,7 +34,6 @@ export function Navigation() {
   }, [mobileOpen]);
 
   const isHome = pathname === '/';
-  const forceWhite = isHome && !scrolled && !mobileOpen && mounted && theme === 'dark';
 
   return (
     <>
@@ -53,16 +47,14 @@ export function Navigation() {
         <div className="container-wide px-6 md:px-12">
           <nav className="flex items-center justify-between h-16 md:h-18">
             <Link href="/" className="flex items-center gap-2 group" aria-label="Twin Forge Co.">
-              <div className={`flex items-center transition-opacity duration-200 ${forceWhite ? 'opacity-90 hover:opacity-100' : ''}`}>
-                <Image
-                  src="/assets/images/Twin_forge_logo.png"
-                  alt="Twin Forge Co."
-                  width={140}
-                  height={48}
-                  className="h-10 w-auto object-contain"
-                  priority
-                />
-              </div>
+              <Image
+                src="/assets/images/Twin_forge_logo.png"
+                alt="Twin Forge Co."
+                width={140}
+                height={48}
+                className="h-10 w-auto object-contain"
+                priority
+              />
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
@@ -72,7 +64,7 @@ export function Navigation() {
                   href={link.href}
                   className={`nav-link transition-colors duration-200 ${
                     pathname === link.href ? 'active text-foreground' : ''
-                  } ${forceWhite ? '!text-white/80 hover:!text-white' : ''}`}
+                  } ${isHome && !scrolled ? '!text-foreground/80 hover:!text-foreground' : ''}`}
                 >
                   {link.label}
                 </Link>
@@ -80,13 +72,13 @@ export function Navigation() {
             </div>
 
             <div className="flex items-center gap-2 md:gap-3">
-              <div className={`hidden sm:block ${forceWhite ? '[&_*]:!text-white/80 [&_button:hover]:!text-white' : ''}`}>
+              <div className="hidden sm:block">
                 <CurrencySelector />
               </div>
 
               <button
                 onClick={openCart}
-                className={`relative p-2.5 rounded-lg transition-all duration-200 hover:bg-foreground/10 ${forceWhite ? 'text-white' : 'text-foreground'}`}
+                className="relative p-2.5 rounded-lg transition-all duration-200 hover:bg-foreground/10 text-foreground"
                 aria-label="Open cart"
               >
                 <ShoppingBag className="w-4 h-4" />
@@ -97,16 +89,6 @@ export function Navigation() {
                 )}
               </button>
 
-              {mounted && (
-                <button
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className={`p-2.5 rounded-lg transition-all duration-200 hover:bg-foreground/10 ${forceWhite ? 'text-white' : 'text-foreground'}`}
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                </button>
-              )}
-
               <Link
                 href="/shop"
                 className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 hover:-translate-y-0.5 bg-[#F9733E] text-white hover:bg-[#e85e28] hover:shadow-lg hover:shadow-[#F9733E]/30"
@@ -116,7 +98,7 @@ export function Navigation() {
               </Link>
 
               <button
-                className={`md:hidden p-2.5 rounded-lg transition-colors ${forceWhite ? 'text-white' : 'text-foreground'}`}
+                className="md:hidden p-2.5 rounded-lg transition-colors text-foreground"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label="Toggle menu"
               >
@@ -162,7 +144,7 @@ export function Navigation() {
         </div>
       )}
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50 px-4 py-3 flex items-center gap-3">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-light border-t border-border/50 px-4 py-3 flex items-center gap-3">
         <Link href="/shop" className="btn-primary flex-1 justify-center py-3 text-sm">
           <Zap className="w-4 h-4" />
           Start Your Build

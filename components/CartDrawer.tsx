@@ -3,10 +3,9 @@
 import { useCart } from '@/components/cart-context';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatPrice } from '@/lib/configurator';
-import { X, ShoppingBag, Plus, Minus, Trash2, ShoppingCart, MessageCircle } from 'lucide-react';
+import { X, ShoppingBag, Plus, Minus, Trash2, ShoppingCart, ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
-
-const WHATSAPP_NUMBER = '96891232926';
+import Link from 'next/link';
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQty, removeItem, totalPrice, totalItems, clearCart } = useCart();
@@ -18,30 +17,6 @@ export function CartDrawer() {
     else document.body.style.overflow = '';
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
-
-  function handleCheckout() {
-    const lines = items.map((item, i) => {
-      const configStr = item.config
-        ? Object.entries(item.config).filter(([, v]) => v).map(([, v]) => v).join(' · ')
-        : '';
-      return `${i + 1}. ${item.name}${configStr ? ` (${configStr})` : ''} — ${fmt(item.price)} × ${item.qty}`;
-    });
-
-    const buildLinks = items
-      .filter(i => i.url)
-      .map((i, idx) => `Build ${idx + 1}: ${i.url}`)
-      .join('\n');
-
-    const message =
-      `Hello Twin Forge Co., I'd like to order:\n\n` +
-      lines.join('\n') +
-      `\n\nTotal: ${fmt(totalPrice)}` +
-      (buildLinks ? `\n\nBuild links:\n${buildLinks}` : '') +
-      `\n\nPlease confirm availability and payment details. Thank you!`;
-
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-  }
 
   return (
     <>
@@ -57,7 +32,6 @@ export function CartDrawer() {
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-5 border-b border-border">
           <div className="flex items-center gap-2.5">
             <ShoppingBag className="w-5 h-5 text-[#F9733E]" />
@@ -70,7 +44,6 @@ export function CartDrawer() {
           </button>
         </div>
 
-        {/* Items */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
@@ -134,7 +107,6 @@ export function CartDrawer() {
           )}
         </div>
 
-        {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-border px-4 sm:px-6 py-5 space-y-4">
             <div className="flex items-center justify-between">
@@ -142,15 +114,16 @@ export function CartDrawer() {
               <span className="text-xl font-semibold text-foreground">{fmt(totalPrice)}</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Checkout sends your order details and build links via WhatsApp to confirm availability and arrange payment.
+              Proceed to checkout to enter your shipping details and choose payment method.
             </p>
-            <button
-              onClick={handleCheckout}
-              className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#1da851] text-white font-medium text-sm py-3.5 rounded-xl transition-colors"
+            <Link
+              href="/checkout"
+              onClick={closeCart}
+              className="btn-primary w-full justify-center py-3.5"
             >
-              <MessageCircle className="w-4 h-4" />
-              Checkout via WhatsApp
-            </button>
+              Checkout
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         )}
       </aside>
