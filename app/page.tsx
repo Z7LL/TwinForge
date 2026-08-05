@@ -246,7 +246,7 @@ export default function Home() {
                       <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#F9733E] text-white">Bestseller</div>
                     </div>
                     <div className="p-6">
-                      <div className="flex items-start justify-between gap-2 mb-3"><h3 className="text-heading-lg font-heading font-semibold text-foreground">Butterfly Trainer</h3><span className="price-tag text-xl text-[#F9733E]">{fmt(34)}</span></div>
+                      <div className="flex items-start justify-between gap-2 mb-3"><h3 className="text-heading-lg font-heading font-semibold text-foreground">Butterfly Trainer</h3><span className="price-tag text-xl text-[#F9733E]">{fmt(2.5)}</span></div>
                       <ul className="space-y-1.5 mb-4">{['Fully customizable', 'Honeycomb grip', 'Safe PLA plastic'].map(feat => <li key={feat} className="flex items-center gap-2 text-xs text-muted-foreground"><Check className="w-3 h-3 text-[#F9733E]" />{feat}</li>)}</ul>
                       <div className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-[#F9733E] transition-colors">Customize<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></div>
                     </div>
@@ -262,7 +262,7 @@ export default function Home() {
                       <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-white/80 text-foreground backdrop-blur-md border border-white/40">Coming soon</div>
                     </div>
                     <div className="p-6">
-                      <div className="flex items-start justify-between gap-2 mb-3"><h3 className="text-heading-lg font-heading font-semibold text-foreground">Viper Mini Shell Mod</h3><span className="price-tag text-xl text-muted-foreground">{fmt(17)}</span></div>
+                      <div className="flex items-start justify-between gap-2 mb-3"><h3 className="text-heading-lg font-heading font-semibold text-foreground">Viper Mini Shell Mod</h3><span className="price-tag text-xl text-muted-foreground">{fmt(1.5)}</span></div>
                       <ul className="space-y-1.5 mb-4">{['Viper Mini compatible', 'Custom colors', 'Snap-fit'].map(feat => <li key={feat} className="flex items-center gap-2 text-xs text-muted-foreground"><Check className="w-3 h-3 text-[#F9733E]" />{feat}</li>)}</ul>
                       <div className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-[#F9733E] transition-colors">Learn more<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></div>
                     </div>
