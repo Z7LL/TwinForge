@@ -6,7 +6,7 @@ import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { ProductModelViewer } from '@/components/ProductModelViewer';
 import { ScrollReveal } from '@/components/ScrollReveal';
-import { Check, ArrowRight, ShoppingBag, Wrench, Zap, Boxes } from 'lucide-react';
+import { Check, ArrowRight, Zap, Boxes } from 'lucide-react';
 import { useCurrency } from '@/hooks/use-currency';
 import { useCart } from '@/components/cart-context';
 import { formatPrice } from '@/lib/configurator';
@@ -73,9 +73,7 @@ export default function ShopPage() {
     <>
       <Navigation />
       <main className="pt-16 min-h-screen bg-background pb-16 md:pb-0">
-
-        {/* Hero — full-bleed dark */}
-        <section className="bg-[#0a0a0a] text-white relative overflow-hidden">
+        <section className="bg-muted/30 text-foreground relative overflow-hidden">
           <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#F9733E]/8 blur-3xl pointer-events-none" />
           <div className="grid-backdrop absolute inset-0 opacity-30" />
           <div className="section-padding relative">
@@ -86,7 +84,7 @@ export default function ShopPage() {
                   Custom 3D-printed{' '}
                   <span className="text-gradient">hardware.</span>
                 </h1>
-                <p className="text-fluid-body text-white/60 mt-6 max-w-lg">
+                <p className="text-fluid-body text-muted-foreground mt-6 max-w-lg">
                   Made-to-order products, built in Oman and shipped worldwide.
                   More custom products coming soon.
                 </p>
@@ -95,7 +93,6 @@ export default function ShopPage() {
           </div>
         </section>
 
-        {/* Filter bar */}
         <section className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-30">
           <div className="container-wide px-6 md:px-12 py-4">
             <div className="flex items-center gap-2">
@@ -116,7 +113,6 @@ export default function ShopPage() {
           </div>
         </section>
 
-        {/* Product grid */}
         <section className="section-padding">
           <div className="container-wide">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -126,7 +122,6 @@ export default function ShopPage() {
                 </ScrollReveal>
               ))}
 
-              {/* More coming soon card */}
               <ScrollReveal delay={filtered.length * 100}>
                 <div className="h-full rounded-2xl border-2 border-dashed border-border bg-card/50 flex flex-col items-center justify-center p-10 text-center min-h-[420px] hover:border-[#F9733E]/40 transition-colors duration-300">
                   <div className="w-16 h-16 rounded-2xl bg-[#F9733E]/10 flex items-center justify-center mb-5">
@@ -145,15 +140,14 @@ export default function ShopPage() {
           </div>
         </section>
 
-        {/* Bottom CTA strip */}
-        <section className="section-padding bg-[#0a0a0a] text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#F9733E]/10 blur-3xl rounded-full" />
+        <section className="section-padding bg-muted/30 text-foreground relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#F9733E]/8 blur-3xl rounded-full" />
           <div className="container-wide relative">
             <ScrollReveal>
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                   <h2 className="text-fluid-heading font-display mb-2">Have a custom idea?</h2>
-                  <p className="text-white/60 max-w-md">We take on limited full custom builds each quarter. Tell us what you&apos;re dreaming up.</p>
+                  <p className="text-muted-foreground max-w-md">We take on limited full custom builds each quarter. Tell us what you&apos;re dreaming up.</p>
                 </div>
                 <Link href="/contact#custom" className="btn-primary text-base px-8 py-4 whitespace-nowrap">
                   <Zap className="w-4 h-4" />
@@ -175,7 +169,7 @@ function ProductCard({ product, fmt }: { product: Product; fmt: (n: number) => s
 
   return (
     <div className="product-card h-full rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
-      <div className="relative h-64 bg-gradient-to-br from-muted/30 to-muted/5 dark:from-white/5 dark:to-transparent">
+      <div className="relative h-64 bg-gradient-to-br from-muted/30 to-muted/5">
         {product.model ? (
           <ProductModelViewer
             src={product.model}
