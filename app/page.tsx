@@ -10,7 +10,7 @@ import { Footer } from '@/components/Footer';
 import {
   ArrowRight, Wrench, Boxes, Gauge, Shield,
   Hammer, Sparkles, Layers, Cpu, Hand, Eye, Scale,
-  Check, Quote, Star, Zap, Printer,
+  Check, Quote, Star, Printer,
 } from 'lucide-react';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatPrice } from '@/lib/configurator';
@@ -89,16 +89,15 @@ export default function Home() {
       <main className="overflow-hidden pb-16 md:pb-0">
 
         <section className="relative min-h-screen bg-background text-foreground flex items-center pt-16 overflow-hidden">
-          <div className="absolute inset-0 grid-backdrop opacity-40" />
-          <div className="absolute top-1/4 -right-32 w-[500px] h-[500px] rounded-full bg-[#F9733E]/8 blur-3xl pointer-events-none animate-glow" />
-          <div className="absolute bottom-0 -left-32 w-96 h-96 rounded-full bg-[#F9733E]/5 blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 dot-backdrop opacity-50" />
 
           <div className="container-wide w-full px-6 md:px-12 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-center min-h-[calc(100vh-4rem)]">
               <div className="flex flex-col gap-6">
                 <ScrollReveal>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-[#F9733E] text-xs font-semibold tracking-wide w-fit">
-                    <Sparkles className="w-3 h-3" /> MADE IN OMAN · EST. 2026
+                  <div className="inline-flex items-center gap-2.5 w-fit">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F9733E]" />
+                    <span className="eyebrow">Made in Oman · Est. 2026</span>
                   </div>
                 </ScrollReveal>
                 <ScrollReveal delay={100}>
@@ -109,7 +108,7 @@ export default function Home() {
                 </ScrollReveal>
                 <ScrollReveal delay={300}>
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Link href="/shop" className="btn-primary text-base px-8 py-4"><Zap className="w-4 h-4" />Start Your Build<ArrowRight className="w-4 h-4" /></Link>
+                    <Link href="/shop" className="btn-accent text-base px-8 py-4">Start Your Build<ArrowRight className="w-4 h-4" /></Link>
                     <Link href="/about" className="btn-secondary text-base px-8 py-4">Our Story</Link>
                   </div>
                 </ScrollReveal>
@@ -152,7 +151,7 @@ export default function Home() {
         </section>
 
         <section className="bg-muted/50 border-y border-border py-6 overflow-hidden">
-          <div className="marquee-track gap-12 text-muted-foreground text-sm font-heading font-semibold tracking-widest uppercase">
+          <div className="marquee-track gap-12 text-muted-foreground label-mono text-xs">
             {[...Array(2)].map((_, dup) => (
               <div key={dup} className="flex items-center gap-12">
                 {['Made in Oman', 'Safe PLA Plastic', 'Built to Order', 'Ships Worldwide', 'CAD-Precise', 'Hand-Finished', 'Fully Custom', '1–5 Day Delivery'].map((item, i) => (
@@ -166,7 +165,7 @@ export default function Home() {
         <section className="section-padding bg-background">
           <div className="container-wide">
             <ScrollReveal className="max-w-2xl mb-16">
-              <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">Why Twin Forge</p>
+              <p className="eyebrow mb-4 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#F9733E]" />Why Twin Forge</p>
               <h2 className="text-fluid-display font-display text-foreground">Engineering precision,{' '}<span className="text-gradient">maker soul.</span></h2>
               <p className="text-fluid-body text-muted-foreground mt-4">Every product is CAD-designed, 3D-printed in PLA plastic, post-processed by hand, and QA-tested before it ships. No two are exactly alike — and that&apos;s the point.</p>
             </ScrollReveal>
@@ -197,7 +196,7 @@ export default function Home() {
           <div className="section-padding relative">
             <div className="container-wide">
               <ScrollReveal className="text-center max-w-2xl mx-auto mb-20">
-                <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">The Forge Process</p>
+                <p className="eyebrow mb-4 flex items-center justify-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#F9733E]" />The Forge Process</p>
                 <h2 className="text-fluid-display font-display">From idea to your hands.</h2>
                 <p className="text-fluid-body text-muted-foreground mt-4">Six steps. Every unit. No shortcuts. Scroll to follow the journey.</p>
               </ScrollReveal>
@@ -232,7 +231,7 @@ export default function Home() {
           <div className="container-wide">
             <ScrollReveal className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
               <div className="max-w-xl">
-                <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">The Lineup</p>
+                <p className="eyebrow mb-4 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#F9733E]" />The Lineup</p>
                 <h2 className="text-fluid-display font-display text-foreground">Built for flipping, fidgeting, and carrying.</h2>
               </div>
               <Link href="/shop" className="text-sm font-semibold text-foreground hover:text-[#F9733E] transition-colors inline-flex items-center gap-2 group">View all products<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></Link>
@@ -274,10 +273,9 @@ export default function Home() {
         </section>
 
         <section className="section-padding bg-muted/30 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#F9733E]/5 blur-3xl pointer-events-none" />
           <div className="container-wide relative">
             <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-              <p className="text-xs font-semibold tracking-widest text-[#F9733E] uppercase mb-3">From the community</p>
+              <p className="eyebrow mb-4 flex items-center justify-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#F9733E]" />From the community</p>
               <h2 className="text-fluid-display font-display">What flippers say.</h2>
             </ScrollReveal>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -301,12 +299,13 @@ export default function Home() {
         <section className="section-padding bg-background">
           <div className="container-wide">
             <ScrollReveal>
-              <div className="relative rounded-3xl bg-gradient-to-br from-[#F9733E] to-[#e85e28] text-white p-12 md:p-20 overflow-hidden">
-                <Zap className="absolute top-6 right-6 w-24 h-24 text-white/10" fill="white" strokeWidth={0} />
+              <div className="relative rounded-[2rem] bg-foreground text-background p-12 md:p-20 overflow-hidden">
+                <div className="absolute inset-0 dot-backdrop opacity-[0.05]" />
                 <div className="relative max-w-2xl">
-                  <h2 className="text-fluid-display font-display mb-4">Build something that&apos;s{' '}<span className="text-white/90">yours.</span></h2>
-                  <p className="text-fluid-body text-white/90 mb-8 max-w-lg">Every product is made to order. Browse the shop and spec one to your exact taste — color, weight, finish.</p>
-                  <Link href="/shop" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#F9733E] font-semibold rounded-lg hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"><Zap className="w-4 h-4" />Start Your Build<ArrowRight className="w-4 h-4" /></Link>
+                  <p className="eyebrow mb-6 flex items-center gap-2 text-background/50"><span className="w-1.5 h-1.5 rounded-full bg-[#F9733E]" />Made to order</p>
+                  <h2 className="text-fluid-display font-display mb-5">Build something that&apos;s{' '}<span className="text-[#F9733E]">yours.</span></h2>
+                  <p className="text-fluid-body text-background/70 mb-8 max-w-lg">Every product is made to order. Browse the shop and spec one to your exact taste — color, weight, finish.</p>
+                  <Link href="/shop" className="btn-accent text-base px-8 py-4">Start Your Build<ArrowRight className="w-4 h-4" /></Link>
                 </div>
               </div>
             </ScrollReveal>
