@@ -37,7 +37,9 @@ export default function Testimonials() {
                   <div key={i} className="w-5 h-5 bg-orange-600 rounded-full" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-6 italic">"{testimonial.text}"</p>
+              <p className="text-gray-300 mb-6 italic">
+                {testimonial.text}
+              </p>
               <div className="text-orange-600 font-semibold">{testimonial.author}</div>
             </motion.div>
           ))}
