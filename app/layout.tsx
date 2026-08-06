@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description: "Premium customizable 3D printed products hand-finished in Oman",
 };
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export default function RootLayout({
   children,
 }: Readonly<{
