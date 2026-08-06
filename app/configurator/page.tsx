@@ -57,7 +57,8 @@ export default function ConfiguratorPage() {
     ? filaments.filter(f => f.company_id === selectedCompany)
     : filaments;
 
-  const colors = [...new Set(filteredFilaments.map(f => f.color_name))];
+  // Fix: Use Array.from instead of spread operator for Set compatibility
+  const colors = Array.from(new Set(filteredFilaments.map(f => f.color_name)));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white p-8">
