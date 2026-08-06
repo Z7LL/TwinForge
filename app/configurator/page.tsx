@@ -2,10 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/lib/database.types';
 
-type Filament = Database['public']['Tables']['filaments']['Row'];
-type FilamentCompany = Database['public']['Tables']['filament_companies']['Row'];
+type Filament = {
+  id: string;
+  company_id: string | null;
+  company_name: string | null;
+  material: string;
+  color_name: string;
+  color_hex: string;
+  cost: number;
+  grams_remaining: number;
+  grams_total: number;
+  image_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type FilamentCompany = {
+  id: string;
+  name: string;
+  created_at: string;
+};
 
 export default function ConfiguratorPage() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
