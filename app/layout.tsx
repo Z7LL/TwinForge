@@ -1,3 +1,4 @@
+/* Atelier Flipbook: metadata and browser chrome match the premium paper-and-sketch TwinForge storefront. */
 import type { Metadata } from 'next';
 import './globals.css';
 import './logo.css';
@@ -5,11 +6,11 @@ import { Providers } from '@/components/Providers';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://twinforge.co'),
-  title: 'Twin Forge Co. — Custom 3D-Crafted Hardware, Made by Two Brothers',
-  description: 'Design it. Tune it. Hold it. Premium customizable EDCs, butterfly trainers, and mods — engineered and 3D-printed by two brothers.',
-  keywords: ['butterfly trainer', 'balisong trainer', '3D printed', 'EDC', 'custom hardware', 'Twin Forge'],
-  icons: { icon: '/assets/images/Favicon.png' },
-  openGraph: { title: 'Twin Forge Co. — Custom 3D-Crafted Hardware', description: 'Premium customizable EDCs and mods, made by two brothers. Design it. Tune it. Hold it.', type: 'website', images: [{ url: '/og-image.jpg' }] },
+  title: 'TwinForge — Your Idea, Tuned by Hand',
+  description: 'A custom-object studio in Oman. Shape a made-to-order 3D-printed build with TwinForge.',
+  keywords: ['custom 3D printed products', 'customization', 'made in Oman', 'TwinForge', '3D printed objects'],
+  icons: { icon: '/assets/editorial/twinforge-mark.png' },
+  openGraph: { title: 'TwinForge — Your Idea, Tuned by Hand', description: 'Custom 3D-printed objects made to be yours.', type: 'website', images: [{ url: '/assets/editorial/twinforge-hero-atelier.png' }] },
   twitter: { card: 'summary_large_image' },
 };
 
