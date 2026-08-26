@@ -40,50 +40,51 @@ export function Navigation() {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           scrolled || !isHome
-            ? 'bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'
+            ? 'bg-background/85 backdrop-blur-xl border-b border-border/60 shadow-sm'
             : 'bg-transparent'
         }`}
       >
-        <div className="container-wide px-6 md:px-12">
-          <nav className="flex items-center justify-between h-16 md:h-18">
+        <div className="container-wide px-5 md:px-10">
+          {/* Nav height reduced: h-12 md:h-14 (was h-16 md:h-18) */}
+          <nav className="flex items-center justify-between h-12 md:h-14">
             <Link href="/" className="flex items-center gap-2 group" aria-label="Twin Forge Co.">
               <Image
                 src="/assets/images/Twin_forge_logo.png"
                 alt="Twin Forge Co."
-                width={140}
-                height={48}
-                className="h-10 w-auto object-contain"
+                width={110}
+                height={36}
+                className="h-8 w-auto object-contain"
                 priority
               />
             </Link>
 
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-7">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`nav-link transition-colors duration-200 ${
+                  className={`nav-link text-xs tracking-widest uppercase font-tag transition-colors duration-200 ${
                     pathname === link.href ? 'active text-foreground' : ''
-                  } ${isHome && !scrolled ? '!text-foreground/80 hover:!text-foreground' : ''}`}
+                  } ${isHome && !scrolled ? '!text-foreground/70 hover:!text-foreground' : ''}`}
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-2">
               <div className="hidden sm:block">
                 <CurrencySelector />
               </div>
 
               <button
                 onClick={openCart}
-                className="relative p-2.5 rounded-lg transition-all duration-200 hover:bg-foreground/10 text-foreground"
+                className="relative p-2 rounded-md transition-all duration-200 hover:bg-foreground/8 text-foreground"
                 aria-label="Open cart"
               >
                 <ShoppingBag className="w-4 h-4" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#F9733E] text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#111] text-white text-[10px] font-bold flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
@@ -91,14 +92,14 @@ export function Navigation() {
 
               <Link
                 href="/shop"
-                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 hover:-translate-y-0.5 bg-[#F9733E] text-white hover:bg-[#e85e28] hover:shadow-lg hover:shadow-[#F9733E]/30"
+                className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-tag rounded-md transition-all duration-300 hover:-translate-y-0.5 bg-[#111] text-white hover:bg-[#F9733E] border-2 border-[#111] hover:border-[#F9733E] hover:shadow-lg"
               >
-                <Zap className="w-3.5 h-3.5" />
-                Start Your Build
+                <Zap className="w-3 h-3" />
+                Build Now
               </Link>
 
               <button
-                className="md:hidden p-2.5 rounded-lg transition-colors text-foreground"
+                className="md:hidden p-2 rounded-md transition-colors text-foreground"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label="Toggle menu"
               >
@@ -111,14 +112,14 @@ export function Navigation() {
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-background animate-fade-in md:hidden">
-          <div className="flex flex-col h-full pt-20 px-6 pb-8">
+          <div className="flex flex-col h-full pt-16 px-6 pb-8">
             <nav className="flex flex-col gap-1 flex-1">
               {navLinks.map((link, i) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`px-4 py-4 text-2xl font-heading font-bold border-b border-border/50 transition-colors duration-200 hover:text-[#F9733E] ${
+                  className={`px-4 py-4 text-2xl font-display border-b border-border/50 transition-colors duration-200 hover:text-[#F9733E] ${
                     pathname === link.href ? 'text-[#F9733E]' : 'text-foreground'
                   }`}
                   style={{ animationDelay: `${i * 50}ms` }}
@@ -156,7 +157,7 @@ export function Navigation() {
         >
           <ShoppingBag className="w-5 h-5" />
           {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F9733E] text-white text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#111] text-white text-[10px] font-bold flex items-center justify-center">
               {totalItems}
             </span>
           )}
